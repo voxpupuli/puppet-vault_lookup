@@ -28,7 +28,16 @@ Puppet::Functions.create_function(:vault_lookup) do
       raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
       return default_options['default_return_value']
     end
-    token = JSON.parse(response.body)['auth']['client_token']
+
+    begin
+      token = JSON.parse(response.body)['auth']['client_token']
+      raise Puppet::Error('No client_token found') if token == nil
+    rescue StandardError => e
+      err_string = "Unable to parse client_token from vault response, original exception from #{e.class} and message: #{e.message}"
+      Puppet.err(err_string)
+      raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
+      return default_options['default_return_value']
+    end
 
     secret_response = connection.get("/v1/#{path}", {"X-Vault-Token" => token} )
     unless secret_response.kind_of?(Net::HTTPOK)
@@ -37,7 +46,16 @@ Puppet::Functions.create_function(:vault_lookup) do
       raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
       return default_options['default_return_value']
     end
-    data = JSON.parse(secret_response.body)['data']
+
+    begin
+      data = JSON.parse(secret_response.body)['data']
+      raise Puppet::Error('No data found for given secret') if data == nil
+    rescue StandardError => e
+      err_string = "Unable to parse secret data from vault response, original exception from #{e.class} and message: #{e.message}"
+      Puppet.err(err_string)
+      raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
+      return default_options['default_return_value']
+    end
 
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
