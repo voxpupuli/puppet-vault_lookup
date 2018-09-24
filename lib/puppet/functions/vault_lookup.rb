@@ -21,7 +21,7 @@ Puppet::Functions.create_function(:vault_lookup) do
 
     connection = Puppet::Network::HttpPool.http_ssl_instance(uri.host,uri.port)
 
-    response = connection.post('/v1/auth/cert/logins',"")
+    response = connection.post('/v1/auth/cert/login',"")
     unless response.kind_of?(Net::HTTPOK)
       err_string = "Received #{response.code} response code from vault at #{uri.host} for authentication"
       Puppet.err(err_string)
