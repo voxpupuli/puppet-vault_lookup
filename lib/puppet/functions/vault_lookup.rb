@@ -6,7 +6,7 @@ Puppet::Functions.create_function(:vault_lookup) do
     optional_param 'Hash', :options
   end
 
-  def vault_lookup(path, vault_url="http://vault.docker:8200", options = {})
+  def vault_lookup(path, vault_url, options = {})
     default_options = { 'raise_exceptions' => true,
                         'default_return_value' => 'vault_lookup_failure'
                       }
