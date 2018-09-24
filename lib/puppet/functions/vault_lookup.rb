@@ -25,7 +25,6 @@ Puppet::Functions.create_function(:vault_lookup) do
     unless response.kind_of?(Net::HTTPOK)
       err_string = "Received #{response.code} response code from vault at #{uri.host} for authentication"
       Puppet.err(err_string)
-      Puppet.debug("Errored response body: #{response.body}")
       raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
       return default_options['default_return_value']
     end
@@ -35,7 +34,6 @@ Puppet::Functions.create_function(:vault_lookup) do
     unless secret_response.kind_of?(Net::HTTPOK)
       err_string = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
       Puppet.err(err_string)
-      Puppet.debug("Errored response body: #{secret_response.body}")
       raise Puppet::Error.new(err_string) if merged_options[:raise_exceptions] == true
       return default_options['default_return_value']
     end
