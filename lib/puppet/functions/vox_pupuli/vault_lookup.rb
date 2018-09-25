@@ -1,4 +1,4 @@
-Puppet::Functions.create_function(:vault_lookup) do
+Puppet::Functions.create_function(:'vox_pupuli::vault_lookup') do
 
   dispatch :vault_lookup do
     param 'String', :path
