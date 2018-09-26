@@ -1,13 +1,13 @@
-Puppet::Functions.create_function(:'vox_pupuli::vault_lookup') do
+Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
-  dispatch :vault_lookup do
+  dispatch :lookup do
     param 'String', :path
     param 'String', :vault_url
     optional_param 'Boolean', :raise_exceptions
   end
 
-  def vault_lookup(path, vault_url, raise_exceptions = true)
-    _vault_lookup(path, vault_url)
+  def lookup(path, vault_url, raise_exceptions = true)
+    _lookup(path, vault_url)
   rescue StandardError => e
     raise if raise_exceptions
     Puppet.err(e.message)
@@ -16,7 +16,7 @@ Puppet::Functions.create_function(:'vox_pupuli::vault_lookup') do
 
   private
 
-  def _vault_lookup(path, vault_url)
+  def _lookup(path, vault_url)
     uri = URI(vault_url)
     # URI is used here to just parse the vault_url into a host string
     # and port; it's possible to generate a URI::Generic when a scheme
