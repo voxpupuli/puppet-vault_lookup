@@ -1,5 +1,4 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
-
   dispatch :lookup do
     param 'String', :path
     param 'String', :vault_url
@@ -10,6 +9,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     _lookup(path, vault_url)
   rescue StandardError => e
     raise if raise_exceptions
+
     Puppet.err(e.message)
     nil
   end
@@ -30,13 +30,14 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
     unless secret_response.is_a?(Net::HTTPOK)
-      raise Puppet::Error, "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+      raise Puppet::Error, append_api_errors(message, secret_response)
     end
 
     begin
       data = JSON.parse(secret_response.body)['data']
     rescue StandardError
-      raise Puppet::Error, "Error parsing json secret data from vault response"
+      raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
 
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
@@ -45,17 +46,27 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   def get_auth_token(connection)
     response = connection.post('/v1/auth/cert/login', '')
     unless response.is_a?(Net::HTTPOK)
-      raise Puppet::Error, "Received #{response.code} response code from vault at #{uri.host} for authentication"
+      message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
+      raise Puppet::Error, append_api_errors(message, response)
     end
 
     begin
       token = JSON.parse(response.body)['auth']['client_token']
     rescue StandardError
-      raise Puppet::Error, "Unable to parse client_token from vault response"
+      raise Puppet::Error, 'Unable to parse client_token from vault response'
     end
 
     raise Puppet::Error, 'No client_token found' if token.nil?
 
     token
+  end
+
+  def append_api_errors(message, response)
+    errors = begin
+               JSON.parse(response.body)['errors']
+             rescue StandardError
+               nil
+             end
+    message << " (api errors: #{errors})" if errors
   end
 end

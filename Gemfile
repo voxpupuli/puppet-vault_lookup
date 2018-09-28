@@ -33,6 +33,9 @@ group :development do
   gem "puppet-module-posix-dev-r#{minor_version}",     require: false, platforms: [:ruby]
   gem "puppet-module-win-default-r#{minor_version}",   require: false, platforms: [:mswin, :mingw, :x64_mingw]
   gem "puppet-module-win-dev-r#{minor_version}",       require: false, platforms: [:mswin, :mingw, :x64_mingw]
+
+  gem "rubocop", "~> 0.59.0"
+  gem "rubocop-i18n", "~>1.3.1"
 end
 
 puppet_version = ENV['PUPPET_GEM_VERSION']
