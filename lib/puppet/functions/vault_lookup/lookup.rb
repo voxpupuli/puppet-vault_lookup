@@ -2,21 +2,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path
     param 'String', :vault_url
-    optional_param 'Boolean', :raise_exceptions
   end
 
-  def lookup(path, vault_url, raise_exceptions = true)
-    _lookup(path, vault_url)
-  rescue StandardError => e
-    raise if raise_exceptions
-
-    Puppet.err(e.message)
-    nil
-  end
-
-  private
-
-  def _lookup(path, vault_url)
+  def lookup(path, vault_url)
     uri = URI(vault_url)
     # URI is used here to just parse the vault_url into a host string
     # and port; it's possible to generate a URI::Generic when a scheme
@@ -42,6 +30,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
+
+  private
 
   def get_auth_token(connection)
     response = connection.post('/v1/auth/cert/login', '')
