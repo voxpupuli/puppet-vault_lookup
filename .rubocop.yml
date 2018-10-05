@@ -2,7 +2,7 @@
 require: rubocop-rspec
 AllCops:
   DisplayCopNames: true
-  TargetRubyVersion: '2.5'
+  TargetRubyVersion: '2.3'
   Include:
   - "lib/**/*.rb"
   - "spec/**/*.rb"
