@@ -17,3 +17,5 @@ spec/spec_helper.rb:
   - rvm: 2.4.4
     bundler_args: --without system_tests development release
     env: PUPPET_VERSION="~> 6.0" CHECK=build DEPLOY_TO_FORGE=yes
+.rubocop.yml:
+  unmanaged: true
