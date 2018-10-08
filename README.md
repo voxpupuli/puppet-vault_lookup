@@ -29,11 +29,24 @@ and of course [Vault](https://www.vaultproject.io/) to store the data.
 The vault_lookup function uses the puppet agent's certificates in order to
 authenticate to the vault server; this means that before any agents contact a
 vault server, you must configure the vault server with the puppetserver's CA
-certificate.
+certificate, and vault must be part of the same certificate infrastructure.
 
-There are two steps to configuring vault to to use the puppetserver CA cert.
+To set up vault to use the puppetserver CA cert:
 
-1. Enable cert auth for vault
+1. Set up vault using puppet certs (if not already set up this way)
+  If the vault host has a puppet agent you can just use the existing
+  certificates. Otherwise generate a new certificate with `puppetserver ca` and
+  copy the files.
+ 
+```
+puppetserver ca generate --certname my-vault.my-domain.me
+```
+
+  In the vault listener configuration, set `tls_client_ca_file` as the puppet ca
+  cert, `tls_cert_file` as the agent or generated certificate, and
+  `tls_key_file` as the agent or generated private key.
+
+2. Enable cert auth for vault
   Hashicorp’s vault supports a variety of auth methods that are listed in their
   documentation; the auth method required for usage with the vault_lookup
   function is named cert, and can be turned on with the vault CLI:
@@ -41,7 +54,7 @@ There are two steps to configuring vault to to use the puppetserver CA cert.
 ```
 $ vault auth enable cert
 ```
-2. Upload the Puppet Server CA certificate to vault
+3. Upload the Puppet Server CA certificate to vault
   After cert auth has been enabled for vault, you can upload your the CA
   certificate from your Puppet Server to Vault and add it as a trusted
   certificate.
