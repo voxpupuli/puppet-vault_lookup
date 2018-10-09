@@ -55,8 +55,8 @@ puppetserver ca generate --certname my-vault.my-domain.me
 ```
 $ vault auth enable cert
 ```
-3. Upload the Puppet Server CA certificate to vault
-  After cert auth has been enabled for Vault, you can upload your the CA
+3. Upload the Puppet Server CA certificate to Vault
+  After cert auth has been enabled for Vault, you upload the CA
   certificate from your Puppet Server to Vault and add it as a trusted
   certificate.
 
