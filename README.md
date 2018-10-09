@@ -1,7 +1,8 @@
 
 # vault_lookup
 
-Module to integrate Puppet 6 and Puppet Enterprise 2019 agents with Hashicorp Vault.
+Module to integrate Puppet 6 and Puppet Enterprise 2019 agents with Hashicorp
+Vault.
 
 #### Table of Contents
 
@@ -11,10 +12,14 @@ Module to integrate Puppet 6 and Puppet Enterprise 2019 agents with Hashicorp Va
 
 ## Description
 
-For users with a Puppet Enterprise 2019 or open source Puppet 6 infrastructure wanting to leverage secrets from  an existing [Hashicorp Vault](https://www.vaultproject.io/) server. Used
-with Puppet 6's Deferred type, this allows agents to retrieve secrets from Vault
-when a catalog is applied. In this way, the secret data is not embedded in the catalog and
-the master never sees it. See [this blog post](https://puppet.com/blog/secret-agents-man-secrets-store-integrations-puppet-6) for more information and other secret store integrations.
+For users with a Puppet Enterprise 2019 or open source Puppet 6 infrastructure
+wanting to leverage secrets from an existing [Hashicorp
+Vault](https://www.vaultproject.io/) server. Used with Puppet 6's Deferred type,
+this allows agents to retrieve secrets from Vault when a catalog is applied. In
+this way, the secret data is not embedded in the catalog and the master never
+sees it. See [this blog
+post](https://puppet.com/blog/secret-agents-man-secrets-store-integrations-puppet-6)
+for more information and other secret store integrations.
 
 Authentication with Vault is achieved via Puppet certificates. See the
 Vault documentation for more information on setting up finer grained access
@@ -22,8 +27,9 @@ controls.
 
 ## Requirements
 
-This is expected to be run using the `Deferred` type, which requires Puppet 6.0.0 and later,
-and of course [Vault](https://www.vaultproject.io/) to store the data.
+This is expected to be run using the `Deferred` type, which requires Puppet
+6.0.0 or later, and of course [Vault](https://www.vaultproject.io/) to store the
+data.
 
 ## Setup
 
@@ -34,7 +40,7 @@ certificate, and Vault must be part of the same certificate infrastructure.
 
 To set up Vault to use the Puppet Server CA cert:
 
-1. Setup Vault using Puppet certs (if not already set up this way)
+1. Set up Vault using Puppet certs (if not already set up this way)
   If the Vault host has a Puppet agent on it then you can just use the existing
   certificates. Otherwise generate a new certificate with `puppetserver ca` and
   copy the files.
@@ -55,9 +61,9 @@ puppetserver ca generate --certname my-vault.my-domain.me
 ```
 $ vault auth enable cert
 ```
-3. Upload the Puppet Server CA certificate to Vault. After cert auth has been enabled for Vault, you upload the CA
-  certificate from your Puppet Server to Vault and add it as a trusted
-  certificate.
+3. Upload the Puppet Server CA certificate to Vault.
+  After cert auth has been enabled for Vault, upload the CA certificate from
+  your Puppet Server to Vault and add it as a trusted certificate.
 
 ```
 $ vault write auth/cert/certs/puppetserver \
