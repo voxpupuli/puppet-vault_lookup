@@ -4,6 +4,7 @@ Gemfile:
 spec/spec_helper.rb:
   mock_with: ':rspec'
 .travis.yml:
+  secure: "YiBx/Wn+j//tFXtbuSCATQWkDjhxtkruO2xuSkVOHPaD4CkICKaM/i96Epd9Z7kkHUUezabTO8Hw9UdMnwhouLqlDXUd2U/fHbHLfsiQUKi2SMaT/QPA9aoVa+FEcHHqRym0Dr3FxPxv+Q3IBF73k0tfnyT5KDIR1AZgV/3VbSvbpLiJ9NkJJUTA3V7+bmTNYTR0xln3Gd/M49OiDF+XYEOCNPVuFXcUZsh0IVEmA1Yr6ep3tydKoujhQUVn+/es+7sFsvKCgUozEEm9YDSKupK7zXm0zjxHuogfm4xHAmKurRIzjWVtmy7SzYRS8gr71AUMrWtKAUDJXXrgKmoaL5xdiD9v8I+QOGwx12k+K2O9l8CezyQ0cWN6xGZxJXn8iPapmoNG26qkiv1Gd1UMJBSRipy320a+HYBCoclezAXeQ0wrthIevd6NNP1/lJHRhKoJMwsUNvHL3OTT0Cx8Zguuno89DnmPdejiZwBK3LrYCniz9/Ez4YnIAF6OipVtixXVO32Fq59SnH9oLLTu+LtQoIINl8Scd17YyN6t6IKwMY2eI96AR1iGcDzP4T7UKr7BEd3eP5c1BQrzliseL6SK+tb1tnZiXozuAgvo/3f0oPhTgbnuYaVUpH9hTOc22PjPF2DGYDUyJ+ND4jF8vSlnGBg+G710pj4PJor6vC0="
   includes:
   - rvm: 2.4.4
     bundler_args: --without system_tests development release
