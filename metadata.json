@@ -1,6 +1,6 @@
 {
   "name": "puppet-vault_lookup",
-  "version": "0.1.1",
+  "version": "0.1.2-rc0",
   "author": "Vox Pupuli",
   "summary": "Secret retrieval from Vault",
   "license": "Apache-2.0",
