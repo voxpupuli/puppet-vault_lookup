@@ -34,6 +34,8 @@ end
 
 desc 'Run acceptance tests'
 RSpec::Core::RakeTask.new(:acceptance) do |t|
+  puts 'acceptance task is hard-coded to use spec/acceptance/nodesets/docker/docker.yml'
+  ENV['BEAKER_setfile'] = 'spec/acceptance/nodesets/docker/docker.yml'
   t.pattern = 'spec/acceptance'
 end
 

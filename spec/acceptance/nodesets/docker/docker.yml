@@ -1,0 +1,21 @@
+---
+HOSTS:
+  puppetserver.local:
+    platform: ubuntu-1604-x86_64 
+    hypervisor: docker
+    image: puppet/puppetserver-standalone:6.0.1
+    roles:
+      - master
+    use_image_entry_point: true
+  vault.local:
+    platform: alpine-3.8-x86_64
+    hypervisor: docker
+    dockerfile: spec/acceptance/nodesets/docker/VaultDockerfile
+    roles:
+      - vault
+CONFIG:
+  nfs_server: none
+  consoleport: 443
+  log_level: verbose
+  validate: false
+  configure: false
