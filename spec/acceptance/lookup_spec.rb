@@ -44,4 +44,14 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
     response = on(master, '/opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
     assert_match(%r{Notice.+foo.+bar}, response.stdout)
   end
+
+  it 'retrieves a secret from vault during an agent run with an env value for vault' do
+    scp_to(
+      master,
+      'spec/acceptance/fixtures/env_value/site.pp',
+      '/etc/puppetlabs/code/environments/production/manifests',
+    )
+    response = on(master, 'VAULT_ADDR=https://vault.local:8200 /opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
+    assert_match(%r{Notice.+foo.+bar}, response.stdout)
+  end
 end

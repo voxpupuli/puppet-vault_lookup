@@ -1,10 +1,16 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path
-    param 'String', :vault_url
+    optional_param 'String', :vault_url
   end
 
-  def lookup(path, vault_url)
+  def lookup(path, vault_url = nil)
+    if vault_url.nil?
+      Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
+      vault_url = ENV['VAULT_ADDR']
+      raise Puppet::Error, 'No vault_url given and VAULT_ADDR env variable not set' if vault_url.nil?
+    end
+
     uri = URI(vault_url)
     # URI is used here to just parse the vault_url into a host string
     # and port; it's possible to generate a URI::Generic when a scheme
