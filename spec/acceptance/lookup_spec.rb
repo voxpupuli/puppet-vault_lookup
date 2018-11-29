@@ -15,24 +15,14 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
     scp_to(vault, 'spec/acceptance/fixtures/unseal.sh', '/root/unseal.sh')
     on(vault, 'su root /root/unseal.sh')
 
-    # Move the PKI infrastructure created on the vault container onto puppetserver
-    tmpdir = Dir.mktmpdir
-    scp_from(vault, '/root/ca/intermediate/private/intermediate.key.pem', tmpdir)
-    scp_from(vault, '/vault/config/crlchain.pem', tmpdir)
-    scp_from(vault, '/vault/config/certbundle.pem', tmpdir)
-    scp_to(master, "#{tmpdir}/crlchain.pem", '/root/crlchain.pem')
-    scp_to(master, "#{tmpdir}/intermediate.key.pem", '/root/intermediate.key.pem')
-    scp_to(master, "#{tmpdir}/certbundle.pem", '/root/certbundle.pem')
-
-    # Something fails here with the find and delete file type, and the ca/infra_serials
-    # is often left behind or instantly regenerated after the delete; sleeping momentarily
-    # and then trying to ensure it is deleted has been successful...
-    on(master, 'find /etc/puppetlabs/puppet/ssl/ -type f -delete')
-    sleep 3
-    on(master, 'rm /etc/puppetlabs/puppet/ssl/ca/infra_serials', acceptable_exit_codes: [0, 1])
-
-    on(master, '/opt/puppetlabs/bin/puppetserver ca import --cert-bundle /root/certbundle.pem --crl-chain /root/crlchain.pem --private-key /root/intermediate.key.pem')
-    on(master, 'service puppetserver reload')
+    step 'ensure the puppetserver is up and available' do
+      opts = { desired_exit_codes: [0], max_retries: 60, retry_interval: 1 }
+      retry_on(
+        master,
+        "/opt/puppetlabs/puppet/bin/curl --insecure --fail \"https://127.0.0.1:8140/production/status/test\" | grep -q '\"is_alive\":true'",
+        opts,
+      )
+    end
   end
 
   it 'retrieves a secret from vault during an agent run' do
