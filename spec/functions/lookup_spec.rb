@@ -58,9 +58,15 @@ describe 'vault_lookup::lookup' do
     }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
   end
 
+  it 'errors when no vault_url set and no VAULT_ADDR environment variable' do
+    expect {
+      function.execute('/v1/whatever')
+    }.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
+  end
+
   it 'raises a Puppet error when auth fails' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
 
     response = Net::HTTPForbidden.new('1.1', 403, auth_failure_data)
     allow(response).to receive(:body).and_return(auth_failure_data)
@@ -73,7 +79,7 @@ describe 'vault_lookup::lookup' do
 
   it 'raises a Puppet error when data lookup fails' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
@@ -93,7 +99,7 @@ describe 'vault_lookup::lookup' do
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
@@ -107,6 +113,28 @@ describe 'vault_lookup::lookup' do
       .and_return(secret_response)
 
     result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
+    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+    expect(result.unwrap).to eq('foo' => 'bar')
+  end
+
+  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type from VAULT_ADDR' do
+    stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
+
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vaultenv.doesnotexist:8200')
+    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vaultenv.doesnotexist', 8200).and_return(connection)
+
+    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+
+    secret_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(secret_response).to receive(:body).and_return(secret_success_data)
+    expect(connection)
+      .to receive(:get)
+      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+      .and_return(secret_response)
+
+    result = function.execute('secret/test')
     expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
     expect(result.unwrap).to eq('foo' => 'bar')
   end

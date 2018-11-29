@@ -44,7 +44,7 @@ To set up Vault to use the Puppet Server CA cert:
   If the Vault host has a Puppet agent on it then you can just use the existing
   certificates. Otherwise generate a new certificate with `puppetserver ca` and
   copy the files.
- 
+
 ```
 puppetserver ca generate --certname my-vault.my-domain.me
 ```
@@ -98,3 +98,18 @@ The lookup function will be run on the agent and the value of `$d` will be
 resolved when the catalog is applied. This will make a call to
 `https://vault.hostname:8200/v1/secret/test` and wrap the result in Puppet's
 `Sensitive` type, which prevents the value from being logged.
+
+You can also choose not to specify the Vault URL, and then Puppet will use the
+`VAULT_ADDR` environment variable. This will be either set on the command line, or
+set in the service config file for Puppet, on Debian `/etc/default/puppet`, on RedHat
+`/etc/sysconfig/puppet`:
+
+```
+$d = Deferred('vault_lookup::lookup', ["secret/test"])
+
+node default {
+  notify { example :
+    message => $d
+  }
+}
+```
