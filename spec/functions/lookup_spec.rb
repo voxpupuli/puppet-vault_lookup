@@ -64,6 +64,13 @@ describe 'vault_lookup::lookup' do
     }.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
   end
 
+  it 'returns nil instead of raising when raising is disabled' do
+    expect {
+      result = function.execute('/v1/whatever', 'vault.docker', false)
+      expect(result).to be(nil)
+    }.not_to raise_error
+  end
+
   it 'raises a Puppet error when auth fails' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
     expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
