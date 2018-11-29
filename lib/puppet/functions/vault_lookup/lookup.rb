@@ -18,7 +18,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     # host is defined.
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
-    connection = Puppet::Network::HttpPool.http_ssl_instance(uri.host, uri.port)
+    use_ssl = uri.scheme == 'https'
+    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
 
     token = get_auth_token(connection)
 

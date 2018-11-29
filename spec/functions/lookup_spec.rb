@@ -66,7 +66,7 @@ describe 'vault_lookup::lookup' do
 
   it 'raises a Puppet error when auth fails' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
     response = Net::HTTPForbidden.new('1.1', 403, auth_failure_data)
     allow(response).to receive(:body).and_return(auth_failure_data)
@@ -79,7 +79,7 @@ describe 'vault_lookup::lookup' do
 
   it 'raises a Puppet error when data lookup fails' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
@@ -99,7 +99,7 @@ describe 'vault_lookup::lookup' do
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vault.doesnotexist', 8200).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
@@ -121,7 +121,7 @@ describe 'vault_lookup::lookup' do
     stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
 
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vaultenv.doesnotexist:8200')
-    expect(Puppet::Network::HttpPool).to receive(:http_ssl_instance).with('vaultenv.doesnotexist', 8200).and_return(connection)
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).with('vaultenv.doesnotexist', 8200, true).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
