@@ -1,0 +1,12 @@
+FROM certs:latest as certs
+
+FROM puppet/puppetserver-standalone:6.0.1
+
+COPY --from=certs /root/ca/intermediate/private/intermediate.key.pem /root/intermediate.key.pem
+COPY --from=certs /root/ca/intermediate/crl/crlchain.pem /root/crlchain.pem
+COPY --from=certs /root/ca/intermediate/certs/ca-bundle.cert.pem /root/certbundle.pem
+
+RUN /opt/puppetlabs/bin/puppetserver ca import \
+  --cert-bundle /root/certbundle.pem \
+  --crl-chain /root/crlchain.pem \
+  --private-key /root/intermediate.key.pem
