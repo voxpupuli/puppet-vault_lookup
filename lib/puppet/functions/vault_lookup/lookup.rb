@@ -1,10 +1,12 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
-    param 'String', :path
+    required_param 'String', :path
     optional_param 'String', :vault_url
+    optional_param 'Variant[Boolean, String]', :local_token
+    optional_param 'String', :local_token_file
   end
 
-  def lookup(path, vault_url = nil)
+  def lookup(path, vault_url = nil, local_token = false, local_token_file = '/etc/vault.token')
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -19,11 +21,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
     use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, :use_ssl => use_ssl)
 
-    token = get_auth_token(connection)
+    token = get_auth_token(connection, local_token, local_token_file)
 
-    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
+    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token )
     unless secret_response.is_a?(Net::HTTPOK)
       message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
@@ -40,21 +42,28 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   private
 
-  def get_auth_token(connection)
-    response = connection.post('/v1/auth/cert/login', '')
-    unless response.is_a?(Net::HTTPOK)
-      message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
-      raise Puppet::Error, append_api_errors(message, response)
-    end
+  def get_auth_token(connection, local_token, local_token_file)
+    if local_token
+      begin
+        token = Puppet::FileSystem.read(local_token_file)
+      rescue
+        raise Puppet::Error, "Unable to read #{local_token_file}"
+      end
+      
+    else
+      response = connection.post('/v1/auth/cert/login', '')
+      unless response.is_a?(Net::HTTPOK)
+        message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
+        raise Puppet::Error, append_api_errors(message, response)
+      end
 
-    begin
-      token = JSON.parse(response.body)['auth']['client_token']
-    rescue StandardError
-      raise Puppet::Error, 'Unable to parse client_token from vault response'
+      begin
+        token = JSON.parse(response.body)['auth']['client_token']
+      rescue StandardError
+        raise Puppet::Error, 'Unable to parse client_token from vault response'
+      end
     end
-
     raise Puppet::Error, 'No client_token found' if token.nil?
-
     token
   end
 
