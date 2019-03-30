@@ -22,7 +22,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     use_ssl = uri.scheme == 'https'
     if use_ssl
-      context = Puppet::SSL::SSLContext.new()
+      context = Puppet::SSL::SSLContext.new
     else
       context = nil
     end
