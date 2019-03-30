@@ -21,7 +21,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
     use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, :use_ssl => use_ssl)
+    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl)
 
     token = get_auth_token(connection, local_token, local_token_file)
 
@@ -49,7 +49,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       rescue
         raise Puppet::Error, "Unable to read #{local_token_file}"
       end
-      
+
     else
       response = connection.post('/v1/auth/cert/login', '')
       unless response.is_a?(Net::HTTPOK)
