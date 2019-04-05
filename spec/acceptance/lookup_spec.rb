@@ -10,7 +10,6 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
     # the host machine; after install, the test needs to move it somewhere
     # on the module path.
     install_module_on(master)
-    on(master, 'mv /vault_lookup /etc/puppetlabs/code/environments/production/modules')
     vault = find_host_with_role('vault')
     scp_to(vault, 'spec/acceptance/fixtures/unseal.sh', '/root/unseal.sh')
     on(vault, 'su root /root/unseal.sh')
