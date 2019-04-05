@@ -6,9 +6,10 @@ require 'beaker/module_install_helper'
 
 describe 'lookup with vault configured to accept certs from puppetserver' do
   before(:all) do
-    # install here doesn't really install, it just moves the module over to
-    # the host machine; after install, the test needs to move it somewhere
-    # on the module path.
+    # Since beaker has not run the PrebuiltSteps to add /opt/puppetlabs/* to the
+    # PATH, add the directories to the top of the /etc/bash.bashrc so the dirs
+    # are available for all non-interactive bash shells.
+    on(master, "sed -i '1s_^_PATH=/opt/puppetlabs/server/bin:/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin:$PATH\\n_' /etc/bash.bashrc")
     install_module_on(master)
     vault = find_host_with_role('vault')
     scp_to(vault, 'spec/acceptance/fixtures/unseal.sh', '/root/unseal.sh')
