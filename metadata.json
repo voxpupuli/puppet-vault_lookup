@@ -7,9 +7,7 @@
   "source": "https://github.com/voxpupuli/puppet-vault_lookup.git",
   "project_page": "https://github.com/voxpupuli/puppet-vault_lookup",
   "issues_url": "https://github.com/voxpupuli/puppet-vault_lookup/issues",
-  "dependencies": [
-
-  ],
+  "dependencies": [],
   "operatingsystem_support": [
     {
       "operatingsystem": "CentOS",
@@ -83,7 +81,7 @@
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 6.0.0"
+      "version_requirement": ">= 5.5.8 < 7.0.0"
     }
   ],
   "pdk-version": "1.7.0",
