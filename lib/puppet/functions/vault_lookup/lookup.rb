@@ -65,5 +65,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                nil
              end
     message << " (api errors: #{errors})" if errors
+
+    message
   end
 end
