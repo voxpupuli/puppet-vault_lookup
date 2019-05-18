@@ -1,16 +1,12 @@
-require 'beaker-rspec'
-require 'beaker-rspec/spec_helper'
-require 'beaker-puppet'
-require 'beaker/puppet_install_helper'
-require 'beaker/module_install_helper'
+require 'spec_helper_acceptance'
 
 describe 'lookup with vault configured to accept certs from puppetserver' do
   before(:all) do
     # Since beaker has not run the PrebuiltSteps to add /opt/puppetlabs/* to the
     # PATH, add the directories to the top of the /etc/bash.bashrc so the dirs
     # are available for all non-interactive bash shells.
-    on(master, "sed -i '1s_^_PATH=/opt/puppetlabs/server/bin:/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin:$PATH\\n_' /etc/bash.bashrc")
-    install_module_on(master)
+    # on(master, "sed -i '1s_^_PATH=/opt/puppetlabs/server/bin:/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin:$PATH\\n_' /etc/bash.bashrc")
+    # install_module_on(master)
     vault = find_host_with_role('vault')
     scp_to(vault, 'spec/acceptance/fixtures/unseal.sh', '/root/unseal.sh')
     on(vault, 'su root /root/unseal.sh')
