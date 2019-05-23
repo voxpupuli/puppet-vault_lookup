@@ -38,6 +38,13 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
 
+  def lookup_key(path, key, vault_url = nil)
+    data = lookup(path, vault_url)
+    data_unwrap = data.unwrap
+    value = data_unwrap[key]
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(value)
+  end
+
   private
 
   def get_auth_token(connection)
