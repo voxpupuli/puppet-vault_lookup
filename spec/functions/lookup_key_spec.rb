@@ -54,13 +54,13 @@ describe 'vault_lookup::lookup_key' do
 
   it 'errors for malformed uri' do
     expect {
-      function.execute('/v1/whatever', 'vault.docker')
+      function.execute('/v1/whatever', 'foo', 'vault.docker')
     }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
   end
 
   it 'errors when no vault_url set and no VAULT_ADDR environment variable' do
     expect {
-      function.execute('/v1/whatever')
+      function.execute('/v1/whatever', 'foo')
     }.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
   end
 
