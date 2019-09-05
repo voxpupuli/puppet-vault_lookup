@@ -104,7 +104,7 @@ You can also choose not to specify the Vault URL, and then Puppet will use the
 set in the service config file for Puppet, on Debian `/etc/default/puppet`, on RedHat
 `/etc/sysconfig/puppet`:
 
-```
+```puppet
 $d = Deferred('vault_lookup::lookup', ["secret/test"])
 
 node default {
@@ -113,3 +113,46 @@ node default {
   }
 }
 ```
+
+The standard lookup call will return a hash of the keys found at the path you
+specified.  This can occasionally be difficult to manipulate within your Puppet code.
+If you wish to look up a specific key at a path and get back the value as a string, you can
+use the `lookup_key` function instead.  An example follows:
+
+```puppet
+$d = Deferred('vault_lookup::lookup_key', ["secret/test", 'mykey', 'https://vault.hostname:8200'])
+
+node default {
+  notify { example :
+    message => $d
+  }
+}
+```
+
+Aside from requiring a key to be passed as the second argument and returning a string, it behaves
+exactly the same as `lookup`.  (including making use of the `VAULT_ADDR` environment variable
+if you don't specify a Vault URL)
+
+If you are attempting to use Deferred calls to retrieve data that goes into another string, or a
+a number of other Puppet functions, for example:
+
+```puppet
+$d = Deferred('vault_lookup::lookup_key', ["secret/test", 'mykey', 'https://vault.hostname:8200'])
+
+node default {
+  notify { example :
+    message => "key is set to ${d}"
+  }
+}
+```
+
+You will find that the message that comes out looks something like:
+
+```output
+key is set to Deferred({'name' => 'lookup_key', 'arguments' => [.........]})
+```
+
+You can work around that by using `${d.call}`, but that does result in the call being processed
+during compilation (on the Puppet master) instead of on the agent, which you may not want.
+
+You can quite a few tips for working with `Deferred` [here](http://puppet-on-the-edge.blogspot.com/2018/10/the-topic-is-deferred.html).
