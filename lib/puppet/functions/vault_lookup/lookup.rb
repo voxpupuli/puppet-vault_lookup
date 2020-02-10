@@ -2,9 +2,21 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path
     optional_param 'String', :vault_url
+    optional_param 'Boolean', :raise_exceptions
   end
 
-  def lookup(path, vault_url = nil)
+  def lookup(path, vault_url = nil, raise_exceptions = true)
+    _lookup(path, vault_url)
+  rescue StandardError => e
+    raise if raise_exceptions
+
+    Puppet.err(e.message)
+    nil
+  end
+
+  private
+
+  def _lookup(path, vault_url)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -37,8 +49,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
-
-  private
 
   def get_auth_token(connection)
     response = connection.post('/v1/auth/cert/login', '')
