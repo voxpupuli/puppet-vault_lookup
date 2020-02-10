@@ -52,6 +52,12 @@ describe 'vault_lookup::lookup' do
     '{"errors":["permission denied"]}'
   end
 
+  let(:warnings_data) do
+    # rubocop:disable Metrics/LineLength
+    '{"request_id":"0971a3db-f77a-4b0f-224d-35ff3e05d23d","lease_id":"","renewable":false,"lease_duration":0,"data":null,"wrap_info":null,"warnings":["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use \'vault kv get\' for this operation."],"auth":null}'
+    # rubocop:enable Metrics/LineLength
+  end
+
   it 'errors for malformed uri' do
     expect {
       function.execute('/v1/whatever', 'vault.docker')
@@ -95,6 +101,26 @@ describe 'vault_lookup::lookup' do
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
     }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+  end
+
+  it 'raises a Puppet error when warning present' do
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+
+    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+
+    secret_response = Net::HTTPNotFound.new('1.1', 404, warnings_data)
+    allow(secret_response).to receive(:body).and_return(warnings_data)
+    expect(connection)
+      .to receive(:get)
+      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+      .and_return(secret_response)
+
+    expect {
+      function.execute('secret/test', 'https://vault.doesnotexist:8200')
+    }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
