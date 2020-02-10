@@ -59,13 +59,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   end
 
   def append_api_errors(message, response)
-    errors = begin
-               JSON.parse(response.body)['errors']
-             rescue StandardError
-               nil
-             end
+    errors   = json_parse(response, 'errors')
+    warnings = json_parse(response, 'warnings')
     message << " (api errors: #{errors})" if errors
-
+    message << " (api warnings: #{warnings})" if warnings
     message
+  end
+
+  def json_parse(response, field)
+    JSON.parse(response.body)[field]
+  rescue StandardError
+    nil
   end
 end
