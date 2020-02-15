@@ -1,10 +1,26 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
-  dispatch :lookup do
+  dispatch :lookup_without_key do
     param 'String', :path
-    optional_param 'String', :vault_url
+    optional_param 'Pattern[/(?i:\Ahttps?:\/\/.*\z)/]', :vault_url # Type aliases are not pluginsynced, so we can't use Stdlib::HTTPUrl and have this function work when Deferred.
   end
 
-  def lookup(path, vault_url = nil)
+  dispatch :lookup_with_key do
+    param 'String', :path
+    param 'String', :key
+    optional_param 'Pattern[/(?i:\Ahttps?:\/\/.*\z)/]', :vault_url
+  end
+
+  def lookup_with_key(path, key, vault_url = nil)
+    data = lookup(path, vault_url)
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data[key])
+  end
+
+  def lookup_without_key(path, vault_url = nil)
+    data = lookup(path, vault_url)
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+  end
+
+  def lookup(path, vault_url)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -30,12 +46,10 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
 
     begin
-      data = JSON.parse(secret_response.body)['data']
+      JSON.parse(secret_response.body)['data']
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
-
-    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
 
   private
