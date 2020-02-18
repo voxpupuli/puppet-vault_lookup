@@ -8,7 +8,6 @@
   "project_page": "https://github.com/voxpupuli/puppet-vault_lookup",
   "issues_url": "https://github.com/voxpupuli/puppet-vault_lookup/issues",
   "dependencies": [
-
   ],
   "operatingsystem_support": [
     {
