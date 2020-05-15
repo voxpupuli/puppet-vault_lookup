@@ -43,11 +43,12 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
         private_key: private_key, client_cert: client_cert, client_chain: chain,
         revocation: 'chain'
       ).freeze
+      puts ssl_context.inspect
     else
       ssl_context = nil
     end
     connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl, ssl_context:ssl_context)
-
+    puts connection.inspect
     token = get_auth_token(connection)
 
     secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
