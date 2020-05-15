@@ -1,6 +1,7 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
   CERT_DELIMITERS = /-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/m
   CRL_DELIMITERS = /-----BEGIN X509 CRL-----.*?-----END X509 CRL-----/m
+  EC_HEADER = /-----BEGIN EC PRIVATE KEY-----/
 
   dispatch :lookup do
     param 'String', :path
@@ -24,8 +25,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     use_ssl = uri.scheme == 'https'
     if use_ssl
+      # here we will duplicate code that puppet ssl_provider does, because it is private
       certname = Puppet[:certname]
-      provider = Puppet::X509::CertProvider.new
 
       capem = Puppet::FileSystem.read(Puppet[:localcacert], encoding: 'UTF-8')
       cacerts = capem.scan(CERT_DELIMITERS).map do |text|
@@ -36,9 +37,18 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       crls = crlpem.scan(CRL_DELIMITERS).map do |text|
         OpenSSL::X509::CRL.new(text)
       end
-      
-      client_cert = provider.load_client_cert(certname, required: true)
-      private_key = provider.load_private_key(certname, required: true, password: nil)
+
+      certpath = File.join(Puppet[:certdir], "#{certname.downcase}.pem")
+      certpem = Puppet::FileSystem.read(certpath, encoding: 'UTF-8')
+      client_cert = OpenSSL::X509::Certificate.new(certpem)
+
+      keypath = File.join(Puppet[:privatekeydir], "#{certname.downcase}.pem")
+      keypem = Puppet::FileSystem.read(keypath, encoding: 'UTF-8')
+      if keypem =~ EC_HEADER
+        private_key = OpenSSL::PKey::EC.new(keypem, nil)
+      else
+        private_key = OpenSSL::PKey::RSA.new(keypem, nil)
+      end
 
       store = OpenSSL::X509::Store.new
       store.purpose = OpenSSL::X509::PURPOSE_ANY
@@ -49,18 +59,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
       store_context = OpenSSL::X509::StoreContext.new(store, client_cert, [])
       store_context.verify
-      chain = store_context.chain
 
       ssl_context = Puppet::SSL::SSLContext.new(
         store: store, cacerts: cacerts, crls: crls,
-        private_key: private_key, client_cert: client_cert, client_chain: chain,
+        private_key: private_key, client_cert: client_cert, client_chain: store_context.chain,
         revocation: 'chain'
       ).freeze
     else
       ssl_context = nil
     end
     connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl, ssl_context:ssl_context)
-    puts connection.inspect
     token = get_auth_token(connection)
 
     secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
