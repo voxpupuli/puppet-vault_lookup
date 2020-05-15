@@ -36,6 +36,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       crls.each { |crl| store.add_crl(crl) }
 
       store_context = OpenSSL::X509::StoreContext.new(store, client_cert, [])
+      store_context.verify
+      puts store_context.inspect
       chain = store_context.chain
 
       ssl_context = Puppet::SSL::SSLContext.new(
@@ -48,7 +50,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       ssl_context = nil
     end
     connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl, ssl_context:ssl_context)
-    puts connection.inspect
     token = get_auth_token(connection)
 
     secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
