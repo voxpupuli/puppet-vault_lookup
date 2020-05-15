@@ -19,7 +19,34 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
     use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    if use_ssl
+      certname = Puppet[:certname]
+      provider = Puppet::X509::CertProvider.new
+
+      cacerts = provider.load_cacerts(required: true)
+      crls = provider.load_crls(required: true)
+      client_cert = provider.load_client_cert(certname, required: true)
+      private_key = provider.load_private_key(certname, required: true, password: nil)
+
+      store = OpenSSL::X509::Store.new
+      store.purpose = OpenSSL::X509::PURPOSE_ANY
+      store.flags = OpenSSL::X509::V_FLAG_CHECK_SS_SIGNATURE | OpenSSL::X509::V_FLAG_CRL_CHECK | OpenSSL::X509::V_FLAG_CRL_CHECK_ALL
+
+      cacerts.each { |cert| store.add_cert(cert) }
+      crls.each { |crl| store.add_crl(crl) }
+
+      store_context = OpenSSL::X509::StoreContext.new(store, client_cert, [])
+      chain = store_context.chain
+
+      ssl_context = Puppet::SSL::SSLContext.new(
+        store: store, cacerts: cacerts, crls: crls,
+        private_key: private_key, client_cert: client_cert, client_chain: chain,
+        revocation: 'chain'
+      ).freeze
+    else
+      ssl_context = nil
+    end
+    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl, ssl_context)
 
     token = get_auth_token(connection)
 
