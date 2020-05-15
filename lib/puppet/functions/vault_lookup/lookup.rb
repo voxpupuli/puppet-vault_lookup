@@ -1,10 +1,14 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
+  CERT_DELIMITERS = /-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/m
+  CRL_DELIMITERS = /-----BEGIN X509 CRL-----.*?-----END X509 CRL-----/m
+
   dispatch :lookup do
     param 'String', :path
     optional_param 'String', :vault_url
   end
 
   def lookup(path, vault_url = nil)
+
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -23,8 +27,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       certname = Puppet[:certname]
       provider = Puppet::X509::CertProvider.new
 
-      cacerts = provider.load_cacerts(required: true)
-      crls = provider.load_crls(required: true)
+      capem = Puppet::FileSystem.read(Puppet[:localcacert], encoding: 'UTF-8')
+      cacerts = capem.scan(CERT_DELIMITERS).map do |text|
+        OpenSSL::X509::Certificate.new(text)
+      end
+
+      crlpem = Puppet::FileSystem.read(Puppet[:hostcrl], encoding: 'UTF-8')
+      crls = crlpem.scan(CRL_DELIMITERS).map do |text|
+        OpenSSL::X509::CRL.new(text)
+      end
+      
       client_cert = provider.load_client_cert(certname, required: true)
       private_key = provider.load_private_key(certname, required: true, password: nil)
 
