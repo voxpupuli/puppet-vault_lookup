@@ -46,7 +46,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     else
       ssl_context = nil
     end
-    connection = Puppet::Network::HttpPool.connection(host: uri.host, port: uri.port, use_ssl: use_ssl, ssl_context:ssl_context)
+    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl, ssl_context:ssl_context)
 
     token = get_auth_token(connection)
 
