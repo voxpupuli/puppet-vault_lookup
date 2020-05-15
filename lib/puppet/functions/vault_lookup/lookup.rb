@@ -37,7 +37,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
       store_context = OpenSSL::X509::StoreContext.new(store, client_cert, [])
       store_context.verify
-      puts store_context.inspect
       chain = store_context.chain
 
       ssl_context = Puppet::SSL::SSLContext.new(
@@ -45,7 +44,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
         private_key: private_key, client_cert: client_cert, client_chain: chain,
         revocation: 'chain'
       ).freeze
-      puts ssl_context.inspect
     else
       ssl_context = nil
     end
