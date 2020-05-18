@@ -1,14 +1,15 @@
-Puppet::Functions.create_function(:'vault_lookup::lookup') do
+Puppet::Functions.create_function(:'vault_lookup::lookup_field') do
   CERT_DELIMITERS = /-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/m
   CRL_DELIMITERS = /-----BEGIN X509 CRL-----.*?-----END X509 CRL-----/m
   EC_HEADER = /-----BEGIN EC PRIVATE KEY-----/
 
-  dispatch :lookup do
+  dispatch :lookup_field do
     param 'String', :path
+    param 'String', :field
     optional_param 'String', :vault_url
   end
 
-  def lookup(path, vault_url = nil)
+  def lookup_field(path, field, vault_url = nil)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -43,7 +44,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
 
-    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data['data'][field])
   end
 
   private
