@@ -44,7 +44,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup_field') do
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
 
-    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data['data'][field])
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data['data'][field] + '\n')
   end
 
   private
