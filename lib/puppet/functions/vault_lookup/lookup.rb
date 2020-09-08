@@ -5,6 +5,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'Optional[String]', :vault_cert_path_segment
     optional_param 'String', :vault_cert_role
     return_type 'Sensitive'
+    optional_param 'String', :vault_namespace
   end
 
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
@@ -12,11 +13,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   def lookup(path,
              vault_url = nil,
              vault_cert_path_segment = nil,
-             vault_cert_role = nil)
+             vault_cert_role = nil,
+             vault_namespace = nil)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
       raise Puppet::Error, 'No vault_url given and VAULT_ADDR env variable not set' if vault_url.nil?
+    end
+    if vault_namespace.nil?
+      Puppet.debug 'No Vault namespace was set on function, defaulting to value from VAULT_NAMESPACE env value'
+      vault_namespace = ENV['VAULT_NAMESPACE']
     end
 
     if vault_cert_path_segment.nil?
@@ -34,10 +40,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     token = get_cert_auth_token(client,
                                 vault_base_uri,
                                 vault_cert_path_segment,
-                                vault_cert_role)
+                                vault_cert_role,
+                                vault_namespace)
 
     secret_uri = vault_base_uri + "/v1/#{path.delete_prefix('/')}"
-    data = get_secret(client, secret_uri, token)
+    data = get_secret(client, secret_uri, token, vault_namespace)
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
 
@@ -51,8 +58,10 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
   end
 
-  def get_secret(client, uri, token)
-    secret_response = client.get(uri, headers: { 'X-Vault-Token' => token })
+  def get_secret(client, uri, token, namespace)
+    headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => namespace }.delete_if { |_key, value| value.nil? }
+    secret_response = client.get(uri,
+                                 headers: headers)
     unless secret_response.success?
       message = "Received #{secret_response.code} response code from vault at #{uri} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
@@ -64,9 +73,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
   end
 
-  def get_cert_auth_token(client, vault_url, vault_cert_path_segment, vault_cert_role)
+  def get_cert_auth_token(client, vault_url, vault_cert_path_segment, vault_cert_role, vault_namespace)
     role_data = auth_login_body(vault_cert_role)
-    headers = { 'Content-Type' => 'application/json' }
+    headers = { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
     segment = if vault_cert_path_segment.end_with?('/')
                 vault_cert_path_segment
               else
