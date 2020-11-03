@@ -33,6 +33,11 @@ data.
 
 ## Setup
 
+`vault_lookup` function can be configured to use Vault Cert or AppRole auth
+methods.
+
+### Vault Cert auth method
+
 The `vault_lookup` function uses the Puppet agent's certificates in order to
 authenticate to the Vault server; this means that before any agents contact a
 Vault server, you must configure the Vault server with the Puppet Server's CA
@@ -76,6 +81,22 @@ $ vault write auth/cert/certs/puppetserver \
 Once the certificate has been uploaded, any Puppet agent with a signed
 certificate will be able to authenticate with Vault.
 
+### Vault AppRole auth method
+
+To use AppRole auth method a configuration file must be used. Configuration
+file should be placed at `{puppet-config-dir}/vault-lookup.yaml` where `{puppet-config-dir}`
+is usually `/etc/puppetlabs/puppet` on Linux systems.
+
+Configuration file syntax is:
+
+```yaml
+---
+VAULT_ADDR: <Vault server URI, including http schema and port>
+AUTH_METHOD: <'cert' | 'approle'>
+VAULT_ROLE_ID: <Vault role ID if using approle method>
+VAULT_SECRET_ID: <Vault secret ID if using approle method>
+```
+
 ## Usage
 
 Install this module as you would in any other; the necessary code will
@@ -100,9 +121,9 @@ resolved when the catalog is applied. This will make a call to
 `Sensitive` type, which prevents the value from being logged.
 
 You can also choose not to specify the Vault URL, and then Puppet will use the
-`VAULT_ADDR` environment variable. This will be either set on the command line, or
-set in the service config file for Puppet, on Debian `/etc/default/puppet`, on RedHat
-`/etc/sysconfig/puppet`:
+value defined in configuration file or `VAULT_ADDR` environment variable. This will
+be either set on the command line, or set in the service config file for
+Puppet, on Debian `/etc/default/puppet`, on RedHat `/etc/sysconfig/puppet`:
 
 ```
 $d = Deferred('vault_lookup::lookup', ["secret/test"])
