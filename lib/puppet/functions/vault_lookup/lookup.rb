@@ -36,7 +36,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value or config file'
       vault_url = VAULT_ADDR
-      raise Puppet::Error, "No vault_url given and VAULT_ADDR not provided, #{VAULT_ADDR}, #{AUTH_METHOD}" if vault_url.nil?
+      raise Puppet::Error, 'No vault_url given and VAULT_ADDR not provided' if vault_url.nil?
     end
 
     uri = URI(vault_url)
@@ -79,18 +79,14 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     if AUTH_METHOD == 'cert'
       response = connection.post('/v1/auth/cert/login', '')
     elsif AUTH_METHOD == 'approle'
-      begin
-        response = connection.post(
-          '/v1/auth/approle/login',
-          {
-            'role_id'   => VAULT_ROLE_ID,
-            'secret_id' => VAULT_SECRET_ID
-          }.to_json,
-          'Content-Type' => 'application/json',
-        )
-      rescue StandardError => e
-        raise Puppet::Error, "Failed performing login request, #{e.backtrace.first}: #{e.message} (#{e.class})"
-      end
+      response = connection.post(
+        '/v1/auth/approle/login',
+        {
+          'role_id'   => VAULT_ROLE_ID,
+          'secret_id' => VAULT_SECRET_ID
+        }.to_json,
+        'Content-Type' => 'application/json',
+      )
     else
       raise Puppet::Error, 'Vault auth method not supported'
     end
