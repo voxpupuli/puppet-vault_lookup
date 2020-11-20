@@ -54,9 +54,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        setfile: ${{fromJson(needs.setup_matrix.outputs.beaker_setfiles)}}
         puppet: ${{fromJson(needs.setup_matrix.outputs.puppet_major_versions)}}
-    name: ${{ matrix.puppet.name }} - ${{ matrix.setfile.name }}
+    name: ${{ matrix.puppet.name }} Acceptance
     steps:
       - name: Enable IPv6 on docker
         run: |
@@ -72,4 +71,4 @@ jobs:
         run: bundle exec rake beaker
         env:
           BEAKER_PUPPET_COLLECTION: ${{ matrix.puppet.collection }}
-          BEAKER_setfile: ${{ matrix.setfile.value }}
+          BEAKER_setfile: spec/acceptance/nodesets/docker/docker.yml
