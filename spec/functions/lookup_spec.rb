@@ -94,4 +94,17 @@ describe 'vault_lookup::lookup' do
       expect(result.unwrap).to eq('foo' => 'bar')
     end
   end
+
+  it 'logs on on Vault with a namespace, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
+    vault_server = MockVault.new
+    vault_server.mount('/v1/auth/cert/login', AuthSuccess)
+    vault_server.mount('/v1/kv/test', SecretLookupSuccess)
+    vault_server.start_vault do |port|
+      stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => "http://127.0.0.1:#{port}"))
+      stub_const('ENV', ENV.to_hash.merge('VAULT_NAMESPACE' => 'foo'))
+      result = function.execute('kv/test')
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('foo' => 'bar')
+    end
+  end
 end
