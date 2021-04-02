@@ -8,13 +8,13 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'String', :key_field
   end
 
-  def lookup(path, vault_url = nil,vault_namespace = nil,vault_cert_path = 'cert',vault_role = nil, key_field = nil)
+  def lookup(path, vault_url = nil, vault_namespace = nil, vault_cert_path = 'cert', vault_role = nil, key_field = nil)
     if vault_url.nil? || vault_url == ''
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
       raise Puppet::Error, 'No vault_url given and VAULT_ADDR env variable not set' if vault_url.nil?
     end
-    
+
     if vault_namespace.nil? || vault_namespace == ''
       Puppet.debug 'No Vault namespace was set on function, defaulting to value from VAULT_Namespace env value'
       vault_namespace = ENV['VAULT_NAMESPACE']
@@ -22,7 +22,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
         Puppet.debug 'No Vault namespace was set in Environment Variable, defaulting to value to root'
       end
     end
-    
+
     if vault_cert_path.nil? || vault_cert_path == ''
       Puppet.debug 'No Vault_cert_path was set on function, defaulting to cert'
       vault_cert_path = 'cert'
@@ -37,7 +37,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     use_ssl = uri.scheme == 'https'
     connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
 
-    token = get_auth_token(connection,vault_namespace,vault_cert_path,vault_role)
+    token = get_auth_token(connection, vault_namespace, vault_cert_path, vault_role)
 
     if vault_namespace.nil? || vault_namespace == ''
       secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
@@ -63,7 +63,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
         else
           data = JSON.parse(secret_response.body)['data']["#{key_field}"]
         end
-      end 
+      end
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
@@ -73,7 +73,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   private
 
-  def get_auth_token(connection,vault_namespace,vault_cert_path,vault_role)
+  def get_auth_token(connection, vault_namespace, vault_cert_path, vault_role)
     if vault_role.nil? || vault_role == ''
       role_data = ''
     else
