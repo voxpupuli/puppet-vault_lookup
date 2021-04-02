@@ -39,11 +39,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     token = get_auth_token(connection, vault_namespace, vault_cert_path, vault_role)
 
-    if vault_namespace.nil? || vault_namespace == ''
-      secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
-    else
-      secret_response = connection.get("/v1/#{vault_namespace}/#{path}", 'X-Vault-Token' => token)
-    end
+    secret_response = if vault_namespace.nil? || vault_namespace == ''
+                        connection.get("/v1/#{path}", 'X-Vault-Token' => token)
+                      else
+                        secret_response = connection.get("/v1/#{vault_namespace}/#{path}", 'X-Vault-Token' => token)
+                      end
 
     unless secret_response.is_a?(Net::HTTPOK)
       message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
