@@ -51,19 +51,17 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
 
     begin
-      data = if key_field.nil? || key_field == ''
-               if path.include? "/data/"
+      kvdata = if path.include? '/data/'
                  JSON.parse(secret_response.body)['data']['data']
                else
                  JSON.parse(secret_response.body)['data']
                end
+      data = if key_field.nil? || key_field == ''
+               JSON.parse(kvdata)[key_field.to_s]
              else
-               if path.include? "/data/"
-                 JSON.parse(secret_response.body)['data']['data']["#{key_field}"]
-               else
-                 JSON.parse(secret_response.body)['data']["#{key_field}"]
-               end
+               data
              end
+
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
