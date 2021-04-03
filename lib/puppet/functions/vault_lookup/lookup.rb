@@ -61,7 +61,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
              else
                data
              end
-
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
