@@ -59,7 +59,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       data = if key_field.nil? || key_field == ''
                JSON.parse(kvdata)[key_field.to_s]
              else
-               data
+               kvdata
              end
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
