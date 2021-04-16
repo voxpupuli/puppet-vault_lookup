@@ -42,11 +42,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     secret_response = if vault_namespace.nil? || vault_namespace == ''
                         connection.get("/v1/#{path}", 'X-Vault-Token' => token)
                       else
-                        connection.get("/v1/#{vault_namespace}/#{path}", 'X-Vault-Token' => token)
+                        connection.get("/v1/#{path}", {'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace})
                       end
 
     unless secret_response.is_a?(Net::HTTPOK)
-      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+      message = "Received #{secret_response.code} response code from vault at #{uri.host} for #{path} lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
 
@@ -79,7 +79,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post("/v1/auth/#{vault_cert_path}/login", role_data)
                else
-                 connection.post("/v1/#{vault_namespace}/auth/#{vault_cert_path}/login", role_data)
+                 connection.post("/v1/auth/#{vault_cert_path}/login", role_data, {'X-Vault-Namespace' => vault_namespace})
                end
 
     unless response.is_a?(Net::HTTPOK)
