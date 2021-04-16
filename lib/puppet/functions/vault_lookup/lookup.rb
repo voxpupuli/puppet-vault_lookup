@@ -46,7 +46,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                       end
 
     unless secret_response.is_a?(Net::HTTPOK)
-      message = "Received #{secret_response.code} response code from vault at #{uri.host} for #{path} lookup"
+      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
 
