@@ -42,7 +42,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     secret_response = if vault_namespace.nil? || vault_namespace == ''
                         connection.get("/v1/#{path}", 'X-Vault-Token' => token)
                       else
-                        connection.get("/v1/#{path}", {'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace})
+                        connection.get("/v1/#{path}", { 'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace })
                       end
 
     unless secret_response.is_a?(Net::HTTPOK)
@@ -79,7 +79,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post("/v1/auth/#{vault_cert_path}/login", role_data)
                else
-                 connection.post("/v1/auth/#{vault_cert_path}/login", role_data, {'X-Vault-Namespace' => vault_namespace})
+                 connection.post("/v1/auth/#{vault_cert_path}/login", role_data, { 'X-Vault-Namespace' => vault_namespace })
                end
 
     unless response.is_a?(Net::HTTPOK)
