@@ -47,7 +47,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                           {
                             'X-Vault-Token' => token,
                             'X-Vault-Namespace' => vault_namespace
-                          }.to_json
+                          }.to_json,
                         )
                       end
 
