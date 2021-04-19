@@ -117,5 +117,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                end
     message << " (api errors: #{warnings})" if warnings
     message << " (api errors: #{errors})" if errors
+    return message
   end
 end
