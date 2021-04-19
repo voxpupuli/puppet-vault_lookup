@@ -115,8 +115,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                rescue StandardError
                  nil
                end
-    message << " (api errors: #{warnings})" if warnings
-    message << " (api errors: #{errors})" if errors
+    message = message << " (api errors: #{warnings})" if warnings
+    message = message << " (api errors: #{errors})" if errors
     return message
   end
 end
