@@ -24,8 +24,8 @@ group :test do
   gem 'redcarpet',                                                  :require => false
   #gem 'rubocop', '~> 0.49.1',                                       :require => false if RUBY_VERSION >= '2.3.0'
   #gem 'rubocop-rspec', '~> 1.15.0',                                 :require => false if RUBY_VERSION >= '2.3.0'
-  gem 'rubocop', '~> 1.0',                                       :require => false if RUBY_VERSION >= '2.3.0'
-  gem 'rubocop-rspec', '~> 2.0',                                 :require => false if RUBY_VERSION >= '2.3.0'
+  gem 'rubocop', '~> 0.81.0',                                       :require => false if RUBY_VERSION >= '2.3.0'
+  gem 'rubocop-rspec', '~> 1.38.0',                                 :require => false if RUBY_VERSION >= '2.3.0'
   gem 'mocha', '~> 1.4.0',                                          :require => false
   gem 'coveralls',                                                  :require => false
   gem 'simplecov-console',                                          :require => false
