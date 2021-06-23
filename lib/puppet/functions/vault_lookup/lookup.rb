@@ -2,13 +2,18 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path
     optional_param 'String', :vault_url
+    optional_param 'String', :vault_namespace
   end
 
-  def lookup(path, vault_url = nil)
+  def lookup(path, vault_url = nil, vault_namespace = nil)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
       raise Puppet::Error, 'No vault_url given and VAULT_ADDR env variable not set' if vault_url.nil?
+    end
+    if vault_namespace.nil?
+      Puppet.debug 'No Vault namespace was set on function, defaulting to value from VAULT_NAMESPACE env value'
+      vault_namespace = ENV['VAULT_NAMESPACE']
     end
 
     uri = URI(vault_url)
@@ -21,9 +26,10 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     use_ssl = uri.scheme == 'https'
     connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
 
-    token = get_auth_token(connection)
+    token = get_auth_token(connection, vault_namespace)
 
-    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
+    headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
+    secret_response = connection.get("/v1/#{path}", headers)
     unless secret_response.is_a?(Net::HTTPOK)
       message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
@@ -40,8 +46,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   private
 
-  def get_auth_token(connection)
-    response = connection.post('/v1/auth/cert/login', '')
+  def get_auth_token(connection, vault_namespace)
+    headers = { 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
+    response = connection.post('/v1/auth/cert/login', '', headers)
     unless response.is_a?(Net::HTTPOK)
       message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
       raise Puppet::Error, append_api_errors(message, response)
