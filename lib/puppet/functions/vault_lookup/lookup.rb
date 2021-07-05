@@ -25,14 +25,14 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
     unless secret_response.is_a?(Net::HTTPOK)
-      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+      message = "Received #{secret_response.code} response code from vault at #{uri.host} for #{path} lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
 
     begin
       data = JSON.parse(secret_response.body)['data']
     rescue StandardError
-      raise Puppet::Error, 'Error parsing json secret data from vault response'
+      raise Puppet::Error, "Error parsing json secret data from vault response for #{path} path"
     end
 
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
