@@ -12,7 +12,7 @@ HOSTS:
     roles:
       - vault
   puppetserver.local:
-    platform: ubuntu-1604-x86_64 
+    platform: ubuntu-2004-x86_64
     hypervisor: docker
     dockerfile: spec/acceptance/nodesets/docker/PuppetserverDockerfile
     roles:
