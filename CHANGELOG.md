@@ -4,13 +4,36 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
-## [v0.1.1](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.1.1) (2018-10-15)
+## [v0.2.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.2.0) (2021-09-19)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.1.1...v0.2.0)
+
+**Implemented enhancements:**
+
+- Add Environmental Lookup option [\#10](https://github.com/voxpupuli/puppet-vault_lookup/pull/10) ([petems](https://github.com/petems))
+
+**Fixed bugs:**
+
+- append\_api\_errors wasn't returning message causing scrub on nil error [\#20](https://github.com/voxpupuli/puppet-vault_lookup/pull/20) ([qfire](https://github.com/qfire))
+
+**Closed issues:**
+
+- Allow Vault configuration from VAULT\_ADDR environment variable [\#8](https://github.com/voxpupuli/puppet-vault_lookup/issues/8)
+
+**Merged pull requests:**
+
+- delete unneeded fixtures file [\#37](https://github.com/voxpupuli/puppet-vault_lookup/pull/37) ([bastelfreak](https://github.com/bastelfreak))
+- Adds warnings to error logging [\#23](https://github.com/voxpupuli/puppet-vault_lookup/pull/23) ([petems](https://github.com/petems))
+- Fix acceptance failures [\#17](https://github.com/voxpupuli/puppet-vault_lookup/pull/17) ([tvpartytonight](https://github.com/tvpartytonight))
+- Run acceptance tests in travis [\#11](https://github.com/voxpupuli/puppet-vault_lookup/pull/11) ([tvpartytonight](https://github.com/tvpartytonight))
+- \(PUP-9212\) Add acceptance tests [\#6](https://github.com/voxpupuli/puppet-vault_lookup/pull/6) ([tvpartytonight](https://github.com/tvpartytonight))
+
+## [v0.1.1](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.1.1) (2018-10-16)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.1.0...v0.1.1)
 
 **Merged pull requests:**
 
-- Prep for 0.1.1 [\#5](https://github.com/voxpupuli/puppet-vault_lookup/pull/5) ([pcarlisle](https://github.com/pcarlisle))
 - Build with puppet 5 [\#4](https://github.com/voxpupuli/puppet-vault_lookup/pull/4) ([pcarlisle](https://github.com/pcarlisle))
 - modulesync 2.0.0-24-g272899e [\#3](https://github.com/voxpupuli/puppet-vault_lookup/pull/3) ([pcarlisle](https://github.com/pcarlisle))
 
