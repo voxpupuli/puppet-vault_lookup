@@ -18,13 +18,12 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     # host is defined.
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    connection = Puppet.runtime[:http]
 
-    token = get_auth_token(connection)
+    token = get_auth_token(connection, vault_url)
 
-    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
-    unless secret_response.is_a?(Net::HTTPOK)
+    secret_response = connection.get(URI(vault_url + "/v1/#{path}"), options: { 'include_system_store' => true }, headers: { 'X-Vault-Token' => token })
+    unless secret_response.success?
       message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
@@ -40,9 +39,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   private
 
-  def get_auth_token(connection)
-    response = connection.post('/v1/auth/cert/login', '')
-    unless response.is_a?(Net::HTTPOK)
+  def get_auth_token(connection, vault_url)
+    response = connection.post(URI(vault_url + '/v1/auth/cert/login'), '', headers: { 'Content-Type' => 'application/json' }, options: { 'include_system_store' => true })
+    unless response.success?
       message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
       raise Puppet::Error, append_api_errors(message, response)
     end
