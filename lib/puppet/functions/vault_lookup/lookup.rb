@@ -1,14 +1,42 @@
+require 'puppet'
+require 'puppet/util'
+require 'yaml'
+require 'fileutils'
+require 'net/http'
+
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path
     optional_param 'String', :vault_url
   end
 
+  configfile = File.join([File.dirname(Puppet.settings[:config]),
+                          'vault-lookup.yaml'])
+
+  AUTH_METHOD = 'cert'
+  VAULT_ADDR = ENV['VAULT_ADDR']
+  VAULT_ROLE_ID = ''
+  VAULT_SECRET_ID = ''
+
+  if File.exist?(configfile)
+    config = YAML.load_file(configfile)
+    AUTH_METHOD = config['AUTH_METHOD'] if config.key?('AUTH_METHOD')
+    VAULT_ADDR = config['VAULT_ADDR'] if config.key?('VAULT_ADDR')
+    VAULT_ROLE_ID = config['VAULT_ROLE_ID'] if config.key?('VAULT_ROLE_ID')
+    VAULT_SECRET_ID = config['VAULT_SECRET_ID'] if config.key?('VAULT_SECRET_ID')
+  else
+    Puppet.debug "Configuration file #{configfile} not found, using defaults"
+  end
+
+  unless ['cert', 'approle'].include?(AUTH_METHOD)
+    raise(Puppet::Error, "vault_lookup auth method #{AUTH_METHOD} not supported, use one of cert or approle")
+  end
+
   def lookup(path, vault_url = nil)
     if vault_url.nil?
-      Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
-      vault_url = ENV['VAULT_ADDR']
-      raise Puppet::Error, 'No vault_url given and VAULT_ADDR env variable not set' if vault_url.nil?
+      Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value or config file'
+      vault_url = VAULT_ADDR
+      raise Puppet::Error, 'No vault_url given and VAULT_ADDR not provided' if vault_url.nil?
     end
 
     uri = URI(vault_url)
@@ -19,7 +47,14 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
     use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+
+    if AUTH_METHOD == 'cert'
+      connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    elsif AUTH_METHOD == 'approle'
+      # When using approle, Vault server certificate doesn't have to match
+      # puppet CA, so we use a plain Net::HTTP connection here
+      connection = Net::HTTP.start(uri.host, uri.port, :use_ssl => use_ssl)
+    end
 
     token = get_auth_token(connection)
 
@@ -41,7 +76,21 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   private
 
   def get_auth_token(connection)
-    response = connection.post('/v1/auth/cert/login', '')
+    if AUTH_METHOD == 'cert'
+      response = connection.post('/v1/auth/cert/login', '')
+    elsif AUTH_METHOD == 'approle'
+      response = connection.post(
+        '/v1/auth/approle/login',
+        {
+          'role_id'   => VAULT_ROLE_ID,
+          'secret_id' => VAULT_SECRET_ID
+        }.to_json,
+        'Content-Type' => 'application/json',
+      )
+    else
+      raise Puppet::Error, 'Vault auth method not supported'
+    end
+
     unless response.is_a?(Net::HTTPOK)
       message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
       raise Puppet::Error, append_api_errors(message, response)
