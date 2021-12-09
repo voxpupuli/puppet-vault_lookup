@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'spec_helper_acceptance'
+
 require 'beaker-rspec'
 require 'beaker-rspec/spec_helper'
 require 'beaker-puppet'
