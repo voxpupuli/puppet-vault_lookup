@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'beaker-rspec'
 require 'beaker-rspec/spec_helper'
 require 'beaker-puppet'
@@ -20,22 +22,22 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       retry_on(
         master,
         "/opt/puppetlabs/puppet/bin/curl --insecure --fail \"https://127.0.0.1:8140/production/status/test\" | grep -q '\"is_alive\":true'",
-        opts,
+        opts
       )
     end
   end
 
-  before(:each) do
+  before do
     # Delete old secret.txt
     on(master, 'rm -f /root/secret.txt')
   end
 
   context 'retrieves a secret from vault during an agent run' do
-    before(:each) do
+    before do
       scp_to(
         master,
         'spec/acceptance/fixtures/site.pp',
-        '/etc/puppetlabs/code/environments/production/manifests',
+        '/etc/puppetlabs/code/environments/production/manifests'
       )
       on(master, '/opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
     end
@@ -47,11 +49,11 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
   end
 
   context 'retrieves a secret from vault during an agent run with an env value for vault' do
-    before(:each) do
+    before do
       scp_to(
         master,
         'spec/acceptance/fixtures/env_value/site.pp',
-        '/etc/puppetlabs/code/environments/production/manifests',
+        '/etc/puppetlabs/code/environments/production/manifests'
       )
       on(master, 'VAULT_ADDR=https://vault.local:8200 /opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
     end

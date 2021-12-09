@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Puppet::Functions.create_function(:'vault_lookup::lookup') do
   dispatch :lookup do
     param 'String', :path

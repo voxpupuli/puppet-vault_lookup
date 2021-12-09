@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 
 describe 'vault_lookup::lookup' do
@@ -53,21 +55,19 @@ describe 'vault_lookup::lookup' do
   end
 
   let(:warnings_data) do
-    # rubocop:disable Metrics/LineLength
     '{"request_id":"0971a3db-f77a-4b0f-224d-35ff3e05d23d","lease_id":"","renewable":false,"lease_duration":0,"data":null,"wrap_info":null,"warnings":["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use \'vault kv get\' for this operation."],"auth":null}'
-    # rubocop:enable Metrics/LineLength
   end
 
   it 'errors for malformed uri' do
-    expect {
+    expect do
       function.execute('/v1/whatever', 'vault.docker')
-    }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
+    end.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
   end
 
   it 'errors when no vault_url set and no VAULT_ADDR environment variable' do
-    expect {
+    expect do
       function.execute('/v1/whatever')
-    }.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
+    end.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
   end
 
   it 'raises a Puppet error when auth fails' do
@@ -78,9 +78,9 @@ describe 'vault_lookup::lookup' do
     allow(response).to receive(:body).and_return(auth_failure_data)
     expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(response)
 
-    expect {
+    expect do
       function.execute('thepath', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+    end.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
   end
 
   it 'raises a Puppet error when data lookup fails' do
@@ -93,14 +93,14 @@ describe 'vault_lookup::lookup' do
 
     secret_response = Net::HTTPForbidden.new('1.1', 403, permission_denied_data)
     allow(secret_response).to receive(:body).and_return(permission_denied_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+    expect(connection).
+      to receive(:get).
+      with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20')).
+      and_return(secret_response)
 
-    expect {
+    expect do
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+    end.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
   end
 
   it 'raises a Puppet error when warning present' do
@@ -113,14 +113,14 @@ describe 'vault_lookup::lookup' do
 
     secret_response = Net::HTTPNotFound.new('1.1', 404, warnings_data)
     allow(secret_response).to receive(:body).and_return(warnings_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+    expect(connection).
+      to receive(:get).
+      with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20')).
+      and_return(secret_response)
 
-    expect {
+    expect do
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
+    end.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
@@ -133,10 +133,10 @@ describe 'vault_lookup::lookup' do
 
     secret_response = Net::HTTPOK.new('1.1', 200, '')
     expect(secret_response).to receive(:body).and_return(secret_success_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+    expect(connection).
+      to receive(:get).
+      with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20')).
+      and_return(secret_response)
 
     result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
     expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
@@ -155,10 +155,10 @@ describe 'vault_lookup::lookup' do
 
     secret_response = Net::HTTPOK.new('1.1', 200, '')
     expect(secret_response).to receive(:body).and_return(secret_success_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+    expect(connection).
+      to receive(:get).
+      with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20')).
+      and_return(secret_response)
 
     result = function.execute('secret/test')
     expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
