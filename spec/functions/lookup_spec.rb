@@ -100,7 +100,7 @@ describe 'vault_lookup::lookup' do
 
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for .*lookup.*permission denied})
   end
 
   it 'raises a Puppet error when warning present' do
@@ -120,7 +120,7 @@ describe 'vault_lookup::lookup' do
 
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
+    }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for .*lookup.*Invalid path for a versioned K/V secrets engine})
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
