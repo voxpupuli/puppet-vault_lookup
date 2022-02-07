@@ -164,4 +164,69 @@ describe 'vault_lookup::lookup' do
     expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
     expect(result.unwrap).to eq('foo' => 'bar')
   end
+
+  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type from namespace' do
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist' )
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+
+    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(connection).to receive(:post).with('/v1/namespace/auth/cert/login', '').and_return(auth_response)
+
+    secret_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(secret_response).to receive(:body).and_return(secret_success_data)
+    expect(connection)
+      .to receive(:get)
+      .with('/v1/namespace/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+      .and_return(secret_response)
+
+    result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
+    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+    expect(result.unwrap).to eq('foo' => 'bar')
+  end
+
+  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type from VAULT_ADDR with namespace VAULT_NAMESPACE' do
+    stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
+    stub_const('ENV', ENV.to_hash.merge('VAULT_NAMESPACE' => 'envnamespace'))
+
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vaultenv.doesnotexist:8200')
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).with('vaultenv.doesnotexist', 8200, true).and_return(connection)
+
+    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(connection).to receive(:post).with('/v1/envnamespace/auth/cert/login', '').and_return(auth_response)
+
+    secret_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(secret_response).to receive(:body).and_return(secret_success_data)
+    expect(connection)
+      .to receive(:get)
+      .with('/v1/envnamespace/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+      .and_return(secret_response)
+
+    result = function.execute('secret/test')
+    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+    expect(result.unwrap).to eq('foo' => 'bar')
+  end
+
+  
+  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type with cert path custompath' do
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+
+    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(connection).to receive(:post).with('/v1/auth/custompath/login', '').and_return(auth_response)
+
+    secret_response = Net::HTTPOK.new('1.1', 200, '')
+    expect(secret_response).to receive(:body).and_return(secret_success_data)
+    expect(connection)
+      .to receive(:get)
+      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+      .and_return(secret_response)
+
+    result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
+    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+    expect(result.unwrap).to eq('foo' => 'bar')
+  end
+
 end
