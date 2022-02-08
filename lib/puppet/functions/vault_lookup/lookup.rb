@@ -182,7 +182,7 @@ private
                                   role_data,
                                   headers: { 'Content-Type' => 'application/json', 'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace },
                                   options: { 'include_system_store' => true },
-                                )
+                 )
                end
 
     unless response.success?
@@ -206,18 +206,18 @@ private
 
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json' }, 
-                                  options: { 'include_system_store' => true },
-                                )
+                   URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json' },
+                   options: { 'include_system_store' => true },
+                 )
                else
                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
-                                  options: { 'include_system_store' => true },
-                                )
+                   URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
+                   options: { 'include_system_store' => true },
+                 )
                end
 
     unless response.success?
