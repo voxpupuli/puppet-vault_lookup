@@ -91,16 +91,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     secret_response = if vault_namespace.nil? || vault_namespace == ''
                         connection.get(
-                                        URI(vault_url + '/v1/' + path.to_s),
-                                        options: { 'include_system_store' => true },
-                                        headers: { 'X-Vault-Token' => vault_token },
-                                      )
+                          URI(vault_url + '/v1/' + path.to_s),
+                          options: { 'include_system_store' => true },
+                          headers: { 'X-Vault-Token' => vault_token },
+                        )
                       else
                         connection.get(
-                                        URI(vault_url + '/v1/' + path.to_s),
-                                        options: { 'include_system_store' => true },
-                                        headers: { 'X-Vault-Token' => vault_token, 'X-Vault-Namespace' => vault_namespace },
-                                      )
+                          URI(vault_url + '/v1/' + path.to_s),
+                          options: { 'include_system_store' => true },
+                          headers: { 'X-Vault-Token' => vault_token, 'X-Vault-Namespace' => vault_namespace },
+                        )
                       end
 
     unless secret_response.success?
@@ -134,21 +134,21 @@ private
                 else
                   "{\"name\": \"#{vault_cert_role}\"}"
                 end
-    
+
     response = if vault_namespace.nil? || vault_namespace == ''
-                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json' },
-                                  options: { 'include_system_store' => true },
-                                )
+                 connection.post(
+                   URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json' },
+                   options: { 'include_system_store' => true },
+                 )
                else
                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
-                                  options: { 'include_system_store' => true },
-                                )
+                   URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
+                   options: { 'include_system_store' => true },
+                 )
                end
 
     unless response.success?
@@ -171,17 +171,17 @@ private
     role_data = '{"metadata": "{ \"tag\": \"pupppet\" }"}'
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json', 'X-Vault-Token' => token },
-                                  options: { 'include_system_store' => true },
-                                )
+                   URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json', 'X-Vault-Token' => token },
+                   options: { 'include_system_store' => true },
+                 )
                else
                  connection.post(
-                                  URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
-                                  role_data,
-                                  headers: { 'Content-Type' => 'application/json', 'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace },
-                                  options: { 'include_system_store' => true },
+                   URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
+                   role_data,
+                   headers: { 'Content-Type' => 'application/json', 'X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace },
+                   options: { 'include_system_store' => true },
                  )
                end
 
