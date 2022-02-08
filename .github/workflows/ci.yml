@@ -78,7 +78,7 @@ jobs:
         run: bundle exec rake beaker
         env:
           BEAKER_PUPPET_COLLECTION: ${{ matrix.puppet.collection }}
-          BEAKER_setfile: ${{ matrix.setfile.value }}
+          BEAKER_setfile: spec/acceptance/nodesets/docker/docker.yml
 
   tests:
     needs:
