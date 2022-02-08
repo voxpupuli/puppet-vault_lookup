@@ -166,7 +166,7 @@ describe 'vault_lookup::lookup' do
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type from namespace' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist' )
+    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
     expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
     auth_response = Net::HTTPOK.new('1.1', 200, '')
@@ -207,7 +207,6 @@ describe 'vault_lookup::lookup' do
     expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
     expect(result.unwrap).to eq('foo' => 'bar')
   end
-
   
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type with cert path custompath' do
     connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
