@@ -11,7 +11,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'String', :vault_role_id_path
   end
 
-  def lookup(path, vault_url = nil, vault_namespace = nil, vault_cert_path = 'cert', vault_cert_role = nil, key_field = nil, vault_app_role_path = nil, vault_app_role_name = nil, vault_role_id_path = nil)
+  def lookup(path, 
+             vault_url = nil,
+             vault_namespace = nil,
+             vault_cert_path = 'cert',
+             vault_cert_role = nil,
+             key_field = nil,
+             vault_app_role_path = nil,
+             vault_app_role_name = nil,
+             vault_role_id_path = nil
+            )
     if vault_url.nil? || vault_url == ''
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -52,9 +61,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       secret_id = get_secret_id(connection, vault_url, vault_namespace, cert_token, vault_app_role_path, vault_app_role_name)
 
       role_file_name_construct = if key_field.nil? || key_field == ''
-                                   path.sub('/','-')
+                                   path.sub('/' , '-')
                                  else
-                                   path.sub('/','-') + '-' + key_field
+                                   path.sub('/' , '-') + '-' + key_field
                                  end
 
       if vault_role_id_path.nil? || vault_role_id_path == ''
@@ -69,11 +78,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       
       if vault_role_id_path.start_with?('env:')
         role_id = ENV[env_role_id]
-        role_token = get_role_auth_token(connection, vault_url, vault_namespace, vault_app_role_path, role_id,secret_id)
+        role_token = get_role_auth_token(connection, vault_url, vault_namespace, vault_app_role_path, role_id, secret_id)
         vault_token = role_token
       elsif File.exist?(role_file)
         role_id = File.open(role_file).read
-        role_token = get_role_auth_token(connection, vault_url, vault_namespace, vault_app_role_path,role_id.chomp, secret_id)
+        role_token = get_role_auth_token(connection, vault_url, vault_namespace, vault_app_role_path, role_id.chomp, secret_id)
         vault_token = role_token
       else
         raise Puppet::Error, "Role file #{role_file} required for role_id does not exist"
@@ -82,9 +91,17 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
 
     if vault_namespace.nil? || vault_namespace == ''
-      secret_response = connection.get(URI(vault_url + '/v1/' + path.to_s), options: { 'include_system_store' => true }, headers: { 'X-Vault-Token' => vault_token })
+      secret_response = connection.get(
+                          URI(vault_url + '/v1/' + path.to_s), 
+                          options: { 'include_system_store' => true }, 
+                          headers: { 'X-Vault-Token' => vault_token }
+                        )
     else
-      secret_response = connection.get(URI(vault_url + '/v1/' + path.to_s), options: { 'include_system_store' => true }, headers: { 'X-Vault-Token' => vault_token, 'X-Vault-Namespace' => vault_namespace })
+      secret_response = connection.get(
+                          URI(vault_url + '/v1/' + path.to_s), 
+                          options: { 'include_system_store' => true }, 
+                          headers: { 'X-Vault-Token' => vault_token, 'X-Vault-Namespace' => vault_namespace }
+                        )
     end
 
     unless secret_response.success?
@@ -94,17 +111,17 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     begin
       jsondata = if path.include? '/data/'
-               JSON.parse(secret_response.body)['data']['data']
-             else
-               JSON.parse(secret_response.body)['data']
-             end
+                   JSON.parse(secret_response.body)['data']['data']
+                 else
+                   JSON.parse(secret_response.body)['data']
+                 end
       data = if key_field.nil? || key_field == ''
                jsondata
              else
                JSON.parse(jsondata)[key_field]
              end
 
-      rescue StandardError
+    rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
 
@@ -122,16 +139,18 @@ private
     
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post(
-                           URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'), 
-                           role_data, 
-                           headers: { 'Content-Type' => 'application/json' }, 
-                           options: { 'include_system_store' => true })
+                           URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
+                           role_data,
+                           headers: { 'Content-Type' => 'application/json' },
+                           options: { 'include_system_store' => true }
+                          )
                else
                  connection.post(
-                           URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'), 
-                           role_data, 
-                           headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }, 
-                           options: { 'include_system_store' => true })
+                           URI(vault_url + '/v1/auth/' + vault_cert_path.to_s + '/login'),
+                           role_data,
+                           headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
+                           options: { 'include_system_store' => true }
+                          )
                end
 
     unless response.success?
@@ -154,16 +173,18 @@ private
     role_data = '{"metadata": "{ \"tag\": \"pupppet\" }"}'
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post(
-                            URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'), 
-                            role_data,
-                            headers: { 'Content-Type' => 'application/json','X-Vault-Token' => token }, 
-                            options: { 'include_system_store' => true })
+                              URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
+                              role_data,
+                              headers: { 'Content-Type' => 'application/json','X-Vault-Token' => token },
+                              options: { 'include_system_store' => true }
+                            )
                else
                  connection.post(
-                            URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'), 
-                            role_data, 
-                            headers: { 'Content-Type' => 'application/json','X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace }, 
-                            options: { 'include_system_store' => true })
+                              URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/role/' + vault_app_role_name.to_s + '/secret-id'),
+                              role_data,
+                              headers: { 'Content-Type' => 'application/json','X-Vault-Token' => token, 'X-Vault-Namespace' => vault_namespace },
+                              options: { 'include_system_store' => true }
+                            )
                end
 
     unless response.success?
@@ -187,16 +208,18 @@ private
 
     response = if vault_namespace.nil? || vault_namespace == ''
                  connection.post(
-                            URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
-                            role_data,
-                            headers: { 'Content-Type' => 'application/json' }, 
-                            options: { 'include_system_store' => true })
+                              URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
+                              role_data,
+                              headers: { 'Content-Type' => 'application/json' }, 
+                              options: { 'include_system_store' => true }
+                            )
                else
                  connection.post(
-                            URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
-                            role_data,
-                            headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
-                            options: { 'include_system_store' => true })
+                              URI(vault_url + '/v1/auth/' + vault_app_role_path.to_s + '/login'),
+                              role_data,
+                              headers: { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace },
+                              options: { 'include_system_store' => true }
+                            )
                end
 
     unless response.success?
