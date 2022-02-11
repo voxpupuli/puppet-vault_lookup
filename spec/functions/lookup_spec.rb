@@ -71,16 +71,16 @@ describe 'vault_lookup::lookup' do
   end
 
   it 'raises a Puppet error when auth fails' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+    connection = instance_double('Puppet.runtime[:http]', address: 'vault.doesnotexist')
+    expect(Puppet::Server::Http).to receive(:Client).and_return(connection)
 
-    response = Net::HTTPForbidden.new('1.1', 403, auth_failure_data)
+    response = Puppet::HTTP::Response.new('1.1', 403, auth_failure_data)
     allow(response).to receive(:body).and_return(auth_failure_data)
     expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(response)
 
     expect {
       function.execute('thepath', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+    }.to raise_error(Puppet::HTTP::ConnectionError, %r{Request to *failed...: Failed to open TCP connection to *(getaddrinfo: Name or service not known)})
   end
 
   it 'raises a Puppet error when data lookup fails' do
