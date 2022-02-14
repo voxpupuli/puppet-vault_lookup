@@ -73,17 +73,17 @@ describe 'vault_lookup::lookup' do
   it 'raises a Puppet error when auth fails' do
     response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 403, auth_failure_data)
     allow(response).to receive(:body).and_return(auth_failure_data)
-  
+
     allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
     expect(Puppet.runtime[:http]).to receive(:post).with(
       URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
       '',
       hash_including(
-        headers: hash_including('Content-Type' => 'application/json', ),
-        options: hash_including('include_system_store' => true)
-      )
+        headers: hash_including('Content-Type' => 'application/json'),
+        options: hash_including('include_system_store' => true),
+      ),
     ).and_return(response)
-  
+
     expect {
       function.execute('thepath', 'https://vault.doesnotexist:8200')
     }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for authentication \(api errors: \["invalid certificate or no client certificate supplied"\]})
