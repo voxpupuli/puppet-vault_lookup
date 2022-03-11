@@ -92,7 +92,9 @@ describe 'vault_lookup::lookup' do
 
   it 'raises a Puppet error when data lookup fails' do
     auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
-    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    allow(auth_response).to receive(:body).and_return(auth_success_data)
+
+    allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
     expect(Puppet.runtime[:http]).to receive(:post).with(
       URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
       '',
@@ -120,12 +122,19 @@ describe 'vault_lookup::lookup' do
   end
 
   it 'raises a Puppet error when warning present' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
-
-    auth_response = Net::HTTPOK.new('1.1', 200, '')
+    auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
     expect(auth_response).to receive(:body).and_return(auth_success_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+    expect(Puppet.runtime[:http]).to receive(:post).with(
+      URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+      '',
+      hash_including(
+        headers: hash_including('Content-Type' => 'application/json'),
+        options: hash_including('include_system_store' => true),
+      ),
+    ).and_return(auth_response)
+
+    secret_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/secret/test'), 404, warnings_dataa)
+    allow(secret_response).to receive(:body).and_return(warnings_data)
 
     secret_response = Net::HTTPNotFound.new('1.1', 404, warnings_data)
     allow(secret_response).to receive(:body).and_return(warnings_data)
