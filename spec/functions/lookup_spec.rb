@@ -49,7 +49,8 @@ describe 'vault_lookup::lookup' do
   end
 
   let(:permission_denied_data) do
-    '{"errors":["permission denied"]}'
+    #'{"errors":["permission denied"]}'
+    '{"errors":["1 error occurred: * permission denied"]}'
   end
 
   let(:warnings_data) do
@@ -115,7 +116,7 @@ describe 'vault_lookup::lookup' do
 
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup \(api errors: \["permission denied"\]})
+    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup \(api errors: \["1 error occurred: * permission denied"\]})
   end
 
   it 'raises a Puppet error when warning present' do
