@@ -49,7 +49,7 @@ describe 'vault_lookup::lookup' do
   end
 
   let(:permission_denied_data) do
-    #'{"errors":["permission denied"]}'
+    # '{"errors":["permission denied"]}'
     '{"errors":["1 error occurred: * permission denied"]}'
   end
 
