@@ -99,16 +99,15 @@ describe 'vault_lookup::lookup' do
     allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
     expect(Puppet.runtime[:http]).to receive(:get).with(
       URI('https://vault.doesnotexist:8200/v1/secret/test'),
-      '',
       hash_including(
-        headers: hash_including(('Content-Type' => 'application/json','X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'}),
-        options: hash_including('include_system_store' => true),
+        headers: hash_including({'Content-Type' => 'application/json','X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'}),
+        options: hash_including('include_system_store' => true)
       ),
     ).and_return(secret_response)  
 
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup \(api errors: \[""permission denied"\]})
   end
 
   it 'raises a Puppet error when warning present' do
