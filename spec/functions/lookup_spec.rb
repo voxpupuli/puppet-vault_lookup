@@ -108,7 +108,7 @@ describe 'vault_lookup::lookup' do
     expect(Puppet.runtime[:http]).to receive(:get).with(
       URI('https://vault.doesnotexist:8200/v1/secret/test'),
       hash_including(
-        headers: hash_including('Content-Type' => 'application/json' , 'X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
+        headers: hash_including('Content-Type' => 'application/json', 'X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
         options: hash_including('include_system_store' => true),
       ),
     ).and_return(secret_response)
