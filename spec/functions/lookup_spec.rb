@@ -115,7 +115,7 @@ describe 'vault_lookup::lookup' do
 
     expect {
       function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup \(api errors: \["1 error occurred:\n\t* permission denied\n\n"\]})
+    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup \(api errors: \["permission denied"\]})
   end
 
   it 'raises a Puppet error when warning present' do
