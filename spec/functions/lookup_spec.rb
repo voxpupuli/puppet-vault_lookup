@@ -90,8 +90,16 @@ describe 'vault_lookup::lookup' do
   end
 
   it 'raises a Puppet error when data lookup fails' do
-    response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
-    expect(Puppet.runtime[:http]).to receive(:body).and_return(auth_success_data)
+    auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
+    expect(auth_response).to receive(:body).and_return(auth_success_data)
+    expect(Puppet.runtime[:http]).to receive(:post).with(
+      URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+      '',
+      hash_including(
+        headers: hash_including('Content-Type' => 'application/json'),
+        options: hash_including('include_system_store' => true),
+      ),
+    ).and_return(auth_response)
 
     secret_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/secret/test'), 403, permission_denied_data)
     allow(secret_response).to receive(:body).and_return(permission_denied_data)
@@ -100,7 +108,7 @@ describe 'vault_lookup::lookup' do
     expect(Puppet.runtime[:http]).to receive(:get).with(
       URI('https://vault.doesnotexist:8200/v1/secret/test'),
       hash_including(
-        headers: hash_including({'Content-Type' => 'application/json','X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'}),
+        headers: hash_including('Content-Type' => 'application/json','X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
         options: hash_including('include_system_store' => true)
       ),
     ).and_return(secret_response)  
