@@ -18,15 +18,28 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     # host is defined.
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
-    use_ssl = uri.scheme == 'https'
-    connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
+    if defined? Puppet.runtime
+      # modern Puppet HTTP client. This allows us to use the system store on >= 7.16.0
+      connection   = Puppet.runtime[:http]
+      token = get_auth_token(connection, vault_url)
+      secret_response = connection.get(URI("#{vault_url}/v1/#{path}"), headers: {'X-Vault-Token' => token}, options: { include_system_store: true })
 
-    token = get_auth_token(connection)
+      unless secret_response.success?
+        message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+        raise Puppet::Error, append_api_errors(message, secret_response)
+      end
+    else
+      # Legacy HttpPool, for backwards compatibility prior to 6.11.0
+      use_ssl = (uri.scheme == 'https')
+      connection = Puppet::Network::HttpPool.http_instance(uri.host, uri.port, use_ssl)
 
-    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
-    unless secret_response.is_a?(Net::HTTPOK)
-      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
-      raise Puppet::Error, append_api_errors(message, secret_response)
+      token = get_auth_token(connection, nil)
+      secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
+
+      unless secret_response.is_a?(Net::HTTPOK)
+        message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+        raise Puppet::Error, append_api_errors(message, secret_response)
+      end
     end
 
     begin
@@ -40,11 +53,24 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   private
 
-  def get_auth_token(connection)
-    response = connection.post('/v1/auth/cert/login', '')
-    unless response.is_a?(Net::HTTPOK)
-      message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
-      raise Puppet::Error, append_api_errors(message, response)
+  def get_auth_token(connection, vault_url)
+    if defined? Puppet.runtime
+      response = connection.post(URI("#{vault_url}/v1/auth/cert/login"),
+                                  '',
+                                  headers: {'Content-Type' => 'application/json'},
+                                  options: { include_system_store: true })
+
+      unless response.success?
+        message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
+        raise Puppet::Error, append_api_errors(message, response)
+      end
+    else
+      response = connection.post('/v1/auth/cert/login', '')
+
+      unless response.is_a?(Net::HTTPOK)
+        message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
+        raise Puppet::Error, append_api_errors(message, response)
+      end
     end
 
     begin

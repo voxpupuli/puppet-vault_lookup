@@ -49,7 +49,11 @@ describe 'vault_lookup::lookup' do
   end
 
   let(:permission_denied_data) do
-    '{"errors":["permission denied"]}'
+    if defined? Puppet.runtime
+      '{"errors":["1 error occurred: * permission denied"]}'
+    else
+      '{"errors":["permission denied"]}'
+    end
   end
 
   let(:warnings_data) do
@@ -71,97 +75,232 @@ describe 'vault_lookup::lookup' do
   end
 
   it 'raises a Puppet error when auth fails' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+    if defined? Puppet.runtime
+      response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 403, auth_failure_data)
+      allow(response).to receive(:body).and_return(auth_failure_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:post).with(
+        URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+        '',
+        hash_including(
+          headers: hash_including('Content-Type' => 'application/json'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(response)
 
-    response = Net::HTTPForbidden.new('1.1', 403, auth_failure_data)
-    allow(response).to receive(:body).and_return(auth_failure_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(response)
+      expect {
+        function.execute('thepath', 'https://vault.doesnotexist:8200')
+      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for authentication \(api errors: \["invalid certificate or no client certificate supplied"\]})
+    else
+      connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+      expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
-    expect {
-      function.execute('thepath', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+      response = Net::HTTPForbidden.new('1.1', 403, auth_failure_data)
+      allow(response).to receive(:body).and_return(auth_failure_data)
+      expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(response)
+
+      expect {
+       function.execute('thepath', 'https://vault.doesnotexist:8200')
+     }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+    end
   end
 
   it 'raises a Puppet error when data lookup fails' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+    if defined? Puppet.runtime
+      auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
+      allow(auth_response).to receive(:body).and_return(auth_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:post).with(
+        URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+        '',
+        hash_including(
+          headers: hash_including('Content-Type' => 'application/json'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(auth_response)
 
-    auth_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(auth_response).to receive(:body).and_return(auth_success_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+      secret_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/secret/test'), 403, permission_denied_data)
+      allow(secret_response).to receive(:body).and_return(permission_denied_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:get).with(
+        URI('https://vault.doesnotexist:8200/v1/secret/test'),
+        hash_including(
+          headers: hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(secret_response)
+      expect {
+        function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      }.to raise_error(Puppet::Error, 'Received 403 response code from vault at vault.doesnotexist for secret lookup (api errors: ["1 error occurred: * permission denied"])')
+    else
+      connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+      expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
-    secret_response = Net::HTTPForbidden.new('1.1', 403, permission_denied_data)
-    allow(secret_response).to receive(:body).and_return(permission_denied_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+      auth_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(auth_response).to receive(:body).and_return(auth_success_data)
+      expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
 
-    expect {
-      function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+      secret_response = Net::HTTPForbidden.new('1.1', 403, permission_denied_data)
+      allow(secret_response).to receive(:body).and_return(permission_denied_data)
+      expect(connection)
+        .to receive(:get)
+        .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+        .and_return(secret_response)
+
+      expect {
+        function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at vault.doesnotexist for secret lookup.*permission denied})
+    end
   end
 
   it 'raises a Puppet error when warning present' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+    if defined? Puppet.runtime
+      auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
+      allow(auth_response).to receive(:body).and_return(auth_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:post).with(
+        URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+        '',
+        hash_including(
+          headers: hash_including('Content-Type' => 'application/json'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(auth_response)
 
-    auth_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(auth_response).to receive(:body).and_return(auth_success_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+      secret_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/secret/test'), 404, warnings_data)
+      allow(secret_response).to receive(:body).and_return(warnings_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:get).with(
+        URI('https://vault.doesnotexist:8200/v1/secret/test'),
+        hash_including(
+          headers: hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(secret_response)
 
-    secret_response = Net::HTTPNotFound.new('1.1', 404, warnings_data)
-    allow(secret_response).to receive(:body).and_return(warnings_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+      expect {
+        function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine.*})
+    else
+      connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+      expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
-    expect {
-      function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
+      auth_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(auth_response).to receive(:body).and_return(auth_success_data)
+      expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+
+      secret_response = Net::HTTPNotFound.new('1.1', 404, warnings_data)
+      allow(secret_response).to receive(:body).and_return(warnings_data)
+      expect(connection)
+        .to receive(:get)
+        .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+        .and_return(secret_response)
+
+      expect {
+        function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at vault.doesnotexist for secret lookup.*Invalid path for a versioned K/V secrets engine})
+    end
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
+    if defined? Puppet.runtime
+      auth_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/auth/cert/login'), 200, '')
+      allow(auth_response).to receive(:body).and_return(auth_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:post).with(
+        URI('https://vault.doesnotexist:8200/v1/auth/cert/login'),
+        '',
+        hash_including(
+          headers: hash_including('Content-Type' => 'application/json'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(auth_response)
 
-    auth_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(auth_response).to receive(:body).and_return(auth_success_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+      secret_response = Puppet::HTTP::Response.new(URI('https://vault.doesnotexist:8200/v1/secret/test'), 200, secret_success_data)
+      allow(secret_response).to receive(:body).and_return(secret_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vault.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:get).with(
+        URI('https://vault.doesnotexist:8200/v1/secret/test'),
+        hash_including(
+          headers: hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(secret_response)
 
-    secret_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(secret_response).to receive(:body).and_return(secret_success_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+      result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('foo' => 'bar')
+    else
+      connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vault.doesnotexist')
+      expect(Puppet::Network::HttpPool).to receive(:http_instance).and_return(connection)
 
-    result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
-    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-    expect(result.unwrap).to eq('foo' => 'bar')
+      auth_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(auth_response).to receive(:body).and_return(auth_success_data)
+      expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+
+      secret_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(secret_response).to receive(:body).and_return(secret_success_data)
+      expect(connection)
+        .to receive(:get)
+        .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+        .and_return(secret_response)
+
+      result = function.execute('secret/test', 'https://vault.doesnotexist:8200')
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('foo' => 'bar')
+    end
   end
 
   it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type from VAULT_ADDR' do
-    stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
+    if defined? Puppet.runtime
+      stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
 
-    connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vaultenv.doesnotexist:8200')
-    expect(Puppet::Network::HttpPool).to receive(:http_instance).with('vaultenv.doesnotexist', 8200, true).and_return(connection)
+      auth_response = Puppet::HTTP::Response.new(URI('https://vaultenv.doesnotexist:8200/v1/auth/cert/login'), 200, '')
+      allow(auth_response).to receive(:body).and_return(auth_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vaultenv.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:post).with(
+        URI('https://vaultenv.doesnotexist:8200/v1/auth/cert/login'),
+        '',
+        hash_including(
+          headers: hash_including('Content-Type' => 'application/json'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(auth_response)
 
-    auth_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(auth_response).to receive(:body).and_return(auth_success_data)
-    expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+      secret_response = Puppet::HTTP::Response.new(URI('https://vaultenv.doesnotexist:8200/v1/secret/test'), 200, secret_success_data)
+      allow(secret_response).to receive(:body).and_return(secret_success_data)
+      allow(Puppet.runtime[:http]).to receive(:address).and_return('vaultenv.doesnotexist')
+      expect(Puppet.runtime[:http]).to receive(:get).with(
+        URI('https://vaultenv.doesnotexist:8200/v1/secret/test'),
+        hash_including(
+          headers: hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'),
+          options: hash_including(include_system_store: true),
+        ),
+      ).and_return(secret_response)
 
-    secret_response = Net::HTTPOK.new('1.1', 200, '')
-    expect(secret_response).to receive(:body).and_return(secret_success_data)
-    expect(connection)
-      .to receive(:get)
-      .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
-      .and_return(secret_response)
+      result = function.execute('secret/test')
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('foo' => 'bar')
+    else
+      stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => 'https://vaultenv.doesnotexist:8200'))
 
-    result = function.execute('secret/test')
-    expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-    expect(result.unwrap).to eq('foo' => 'bar')
+      connection = instance_double('Puppet::Network::HTTP::Connection', address: 'vaultenv.doesnotexist:8200')
+      expect(Puppet::Network::HttpPool).to receive(:http_instance).with('vaultenv.doesnotexist', 8200, true).and_return(connection)
+
+      auth_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(auth_response).to receive(:body).and_return(auth_success_data)
+      expect(connection).to receive(:post).with('/v1/auth/cert/login', '').and_return(auth_response)
+
+      secret_response = Net::HTTPOK.new('1.1', 200, '')
+      expect(secret_response).to receive(:body).and_return(secret_success_data)
+      expect(connection)
+        .to receive(:get)
+        .with('/v1/secret/test', hash_including('X-Vault-Token' => '7dad29d2-40af-038f-cf9c-0aeb616f8d20'))
+        .and_return(secret_response)
+
+      result = function.execute('secret/test')
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('foo' => 'bar')
+    end
   end
 end
