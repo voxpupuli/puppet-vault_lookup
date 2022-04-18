@@ -101,7 +101,7 @@ describe 'vault_lookup::lookup' do
 
       expect {
        function.execute('thepath', 'https://vault.doesnotexist:8200')
-     }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
     end
   end
 

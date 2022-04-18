@@ -20,9 +20,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     if defined? Puppet.runtime
       # modern Puppet HTTP client. This allows us to use the system store on >= 7.16.0
-      connection   = Puppet.runtime[:http]
+      connection = Puppet.runtime[:http]
       token = get_auth_token(connection, vault_url)
-      secret_response = connection.get(URI("#{vault_url}/v1/#{path}"), headers: {'X-Vault-Token' => token}, options: { include_system_store: true })
+      secret_response = connection.get(URI("#{vault_url}/v1/#{path}"), headers: { 'X-Vault-Token' => token }, options: { include_system_store: true })
 
       unless secret_response.success?
         message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
@@ -56,9 +56,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   def get_auth_token(connection, vault_url)
     if defined? Puppet.runtime
       response = connection.post(URI("#{vault_url}/v1/auth/cert/login"),
-                                  '',
-                                  headers: {'Content-Type' => 'application/json'},
-                                  options: { include_system_store: true })
+                                 '',
+                                 headers: { 'Content-Type' => 'application/json' },
+                                 options: { include_system_store: true })
 
       unless response.success?
         message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
