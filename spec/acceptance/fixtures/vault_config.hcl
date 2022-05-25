@@ -1,4 +1,5 @@
 {
+  "disable_mlock": true,
   "backend": {
     "file": {
       "path": "/vault/file"

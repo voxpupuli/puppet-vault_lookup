@@ -9,4 +9,6 @@ COPY --from=certs /root/ca/intermediate/private/vault.key.pem /vault/config/vaul
 COPY --from=certs /root/ca/intermediate/certs/vault.cert.pem /vault/config/vault.cert
 COPY --from=certs /root/ca/intermediate/certs/ca-bundle.cert.pem /vault/config/certbundle.pem
 
+RUN chown -R vault:vault /vault
+
 CMD ["server"]
