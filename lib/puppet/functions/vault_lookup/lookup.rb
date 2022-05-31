@@ -54,7 +54,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   private
 
   def get_auth_token(connection, vault_url)
-    if defined? Puppet.runtime
+    if defined? Puppet.runtime && Puppet.runtime[:http]
       response = connection.post(URI("#{vault_url}/v1/auth/cert/login"),
                                  '',
                                  headers: { 'Content-Type' => 'application/json' },
