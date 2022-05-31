@@ -18,7 +18,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     # host is defined.
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless uri.hostname
 
-    if defined? Puppet.runtime
+    if defined? Puppet.runtime && Puppet.runtime[:http]
       # modern Puppet HTTP client. This allows us to use the system store on >= 7.16.0
       connection = Puppet.runtime[:http]
       token = get_auth_token(connection, vault_url)
