@@ -1,5 +1,5 @@
 FROM certs:latest as certs
-FROM vault:0.11.0
+FROM vault:1.10.0
 
 COPY spec/acceptance/fixtures/vault_config.hcl /vault/config/vault_config.hcl
 

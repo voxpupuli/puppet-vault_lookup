@@ -1,5 +1,5 @@
 $var = {
-  'd' => Deferred('vault_lookup::lookup',["secret/test", 'https://vault.local:8200']),
+  'd' => Deferred('vault_lookup::lookup',["kv/test", 'https://vault.local:8200']),
 }
 
 node default {
