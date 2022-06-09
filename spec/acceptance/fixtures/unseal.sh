@@ -14,10 +14,10 @@ export VAULT_TOKEN
 
 vault operator unseal "$VAULT_KEY"
 
-echo "Create secret_reader policy that can read from secret/*"
+echo "Create secret_reader policy that can read from kv/*"
 
 vault policy write secret_reader - <<EOF
-path "secret/*" {
+path "kv/*" {
     capabilities = ["read"]
 }
 EOF
@@ -27,8 +27,8 @@ echo "Adding cert auth paths."
 
 vault auth enable cert
 
-vault write auth/cert/certs/vault.docker display_name='puppet cert' certificate=@/vault/config/certbundle.pem policies=secret_reader
+vault write auth/cert/certs/vault.docker display_name='puppet cert' certificate=@/vault/config/certbundle.pem token_policies=secret_reader
 
 echo 'Write secret/test: foo=bar'
-
-vault write secret/test foo=bar
+vault secrets enable -version=1 kv
+vault kv put kv/test foo=bar

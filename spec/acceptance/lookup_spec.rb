@@ -19,7 +19,7 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       opts = { desired_exit_codes: [0], max_retries: 60, retry_interval: 1 }
       retry_on(
         master,
-        "/opt/puppetlabs/puppet/bin/curl --insecure --fail \"https://127.0.0.1:8140/production/status/test\" | grep -q '\"is_alive\":true'",
+        '/opt/puppetlabs/puppet/bin/curl --insecure --fail https://127.0.0.1:8140/status/v1/simple | grep running',
         opts,
       )
     end

@@ -1,5 +1,5 @@
 $var = {
-  'd' => Deferred('vault_lookup::lookup', ["secret/test"])
+  'd' => Deferred('vault_lookup::lookup', ["kv/test"])
 }
 
 node default {
