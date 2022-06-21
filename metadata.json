@@ -1,6 +1,6 @@
 {
   "name": "puppet-vault_lookup",
-  "version": "0.1.2-rc0",
+  "version": "0.2.1-rc0",
   "author": "Vox Pupuli",
   "summary": "Secret retrieval from Vault",
   "license": "Apache-2.0",
@@ -83,10 +83,7 @@
   "requirements": [
     {
       "name": "puppet",
-      "version_requirement": ">= 6.0.0"
+      "version_requirement": ">= 6.16.0 < 8.0.0"
     }
-  ],
-  "pdk-version": "1.7.0",
-  "template-url": "file:///opt/puppetlabs/pdk/share/cache/pdk-templates.git",
-  "template-ref": "1.7.0-0-g57412ed"
+  ]
 }

@@ -1,7 +1,10 @@
-$d = Deferred('vault_lookup::lookup',["secret/test"])
+$var = {
+  'd' => Deferred('vault_lookup::lookup', ["kv/test"])
+}
 
 node default {
-  notify { "example with env lookup":
-    message => $d
+  file { '/root/secret.txt':
+    ensure  => present,
+    content => Deferred('inline_epp', ['<%= $d.unwrap.convert_to(Array).flatten() %>', $var])
   }
 }

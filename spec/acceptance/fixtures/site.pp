@@ -1,7 +1,10 @@
-$d = Deferred('vault_lookup::lookup',["secret/test", 'https://vault.local:8200'])
+$var = {
+  'd' => Deferred('vault_lookup::lookup',["kv/test", 'https://vault.local:8200']),
+}
 
 node default {
-  notify { example :
-    message => $d
+  file { '/root/secret.txt':
+    ensure  => present,
+    content => Deferred('inline_epp', ['<%= $d.unwrap.convert_to(Array).flatten() %>', $var])
   }
 }

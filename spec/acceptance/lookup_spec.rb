@@ -19,29 +19,46 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       opts = { desired_exit_codes: [0], max_retries: 60, retry_interval: 1 }
       retry_on(
         master,
-        "/opt/puppetlabs/puppet/bin/curl --insecure --fail \"https://127.0.0.1:8140/production/status/test\" | grep -q '\"is_alive\":true'",
+        '/opt/puppetlabs/puppet/bin/curl --insecure --fail https://127.0.0.1:8140/status/v1/simple | grep running',
         opts,
       )
     end
   end
 
-  it 'retrieves a secret from vault during an agent run' do
-    scp_to(
-      master,
-      'spec/acceptance/fixtures/site.pp',
-      '/etc/puppetlabs/code/environments/production/manifests',
-    )
-    response = on(master, '/opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
-    assert_match(%r{Notice.+foo.+bar}, response.stdout)
+  before(:each) do
+    # Delete old secret.txt
+    on(master, 'rm -f /root/secret.txt')
   end
 
-  it 'retrieves a secret from vault during an agent run with an env value for vault' do
-    scp_to(
-      master,
-      'spec/acceptance/fixtures/env_value/site.pp',
-      '/etc/puppetlabs/code/environments/production/manifests',
-    )
-    response = on(master, 'VAULT_ADDR=https://vault.local:8200 /opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
-    assert_match(%r{Notice.+foo.+bar}, response.stdout)
+  context 'retrieves a secret from vault during an agent run' do
+    before(:each) do
+      scp_to(
+        master,
+        'spec/acceptance/fixtures/site.pp',
+        '/etc/puppetlabs/code/environments/production/manifests',
+      )
+      on(master, '/opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
+    end
+
+    describe file('/root/secret.txt') do
+      it { is_expected.to be_file }
+      its(:content) { is_expected.to match '[foo, bar]' }
+    end
+  end
+
+  context 'retrieves a secret from vault during an agent run with an env value for vault' do
+    before(:each) do
+      scp_to(
+        master,
+        'spec/acceptance/fixtures/env_value/site.pp',
+        '/etc/puppetlabs/code/environments/production/manifests',
+      )
+      on(master, 'VAULT_ADDR=https://vault.local:8200 /opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
+    end
+
+    describe file('/root/secret.txt') do
+      it { is_expected.to be_file }
+      its(:content) { is_expected.to match '[foo, bar]' }
+    end
   end
 end

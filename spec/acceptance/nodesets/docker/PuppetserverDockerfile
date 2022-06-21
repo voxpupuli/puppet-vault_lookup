@@ -1,6 +1,6 @@
 FROM certs:latest as certs
 
-FROM puppet/puppetserver-standalone:6.0.1
+FROM puppet/puppetserver:7.8.0
 
 COPY --from=certs /root/ca/intermediate/private/intermediate.key.pem /root/intermediate.key.pem
 COPY --from=certs /root/ca/intermediate/crl/crlchain.pem /root/crlchain.pem
