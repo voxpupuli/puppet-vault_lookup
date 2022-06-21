@@ -8,13 +8,13 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     return_type 'Sensitive'
   end
 
+  DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
+
   def lookup(path,
              vault_url = nil,
              secret_name = nil,
              vault_cert_path_segment = nil,
              vault_cert_role = nil)
-
-    DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
 
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
