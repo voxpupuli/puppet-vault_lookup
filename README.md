@@ -87,10 +87,8 @@ type. For example:
 ```puppet
 $d = Deferred('vault_lookup::lookup', ["secret/test", 'https://vault.hostname:8200'])
 
-node default {
-  notify { example :
-    message => $d
-  }
+notify { example :
+  message => $d
 }
 ```
 
@@ -98,6 +96,32 @@ The lookup function will be run on the agent and the value of `$d` will be
 resolved when the catalog is applied. This will make a call to
 `https://vault.hostname:8200/v1/secret/test` and wrap the result in Puppet's
 `Sensitive` type, which prevents the value from being logged.
+
+In this approach `$d` will contain a hash of Sensitive values, matching the elements in your Vault secret. The only way (at the moment) to process this hash is with the `inline_epp()` function:
+```
+$variables = {
+  'secret' => Deferred('vault_lookup::lookup',
+                ["secret/test", 'https://vault.hostname:8200']),
+}
+
+# retrieve the value for the 'db_password' element in the secret
+file { '/etc/secrets.conf':
+  ensure  => file,
+  content => Deferred('inline_epp',
+               ['PASSWORD=<%= $secret.unwrap['db_password'] %>', $variables]),
+}
+```
+
+An optional 3rd parameter to the `vault_lookup::lookup` function can be used to get 1 element of the secret directly. As the result is a Sensitive string instead of a hash, it's easier to deal with:
+
+```puppet
+$db_pass = Deferred('vault_lookup::lookup', ["secret/test", 'https://vault.hostname:8200', 'db_password'])
+
+user { 'db_user' :
+  ensure   => present,
+  password => $db_pass
+}
+```
 
 You can also choose not to specify the Vault URL, and then Puppet will use the
 `VAULT_ADDR` environment variable. This will be either set on the command line, or
@@ -107,9 +131,8 @@ set in the service config file for Puppet, on Debian `/etc/default/puppet`, on R
 ```
 $d = Deferred('vault_lookup::lookup', ["secret/test"])
 
-node default {
-  notify { example :
-    message => $d
-  }
+notify { example :
+  message => $d
 }
 ```
+
