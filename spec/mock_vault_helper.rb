@@ -87,6 +87,18 @@ module PuppetVaultLookupHelpers
     end
   end
 
+  class AuthSuccessWithNamespace < WEBrick::HTTPServlet::AbstractServlet
+    def do_POST(request, response)
+      if request.header['x-vault-namespace'] == ['foo']
+        response.body = AUTH_SUCCESS_DATA
+        response.status = 200
+        response.content_type = 'application/json'
+      else
+        response.status = 403
+      end
+    end
+  end
+
   class SecretLookupDenied < WEBrick::HTTPServlet::AbstractServlet
     def do_GET(_request, response)
       response.body = '{"errors":["permission denied"]}'

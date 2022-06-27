@@ -97,7 +97,7 @@ describe 'vault_lookup::lookup' do
 
   it 'logs on on Vault with a namespace, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
     vault_server = MockVault.new
-    vault_server.mount('/v1/auth/cert/login', AuthSuccess)
+    vault_server.mount('/v1/auth/cert/login', AuthSuccessWithNamespace)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
       stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => "http://127.0.0.1:#{port}"))
