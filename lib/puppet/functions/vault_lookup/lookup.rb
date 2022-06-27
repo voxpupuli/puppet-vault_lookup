@@ -60,8 +60,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   def get_secret(client, uri, token, namespace)
     headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => namespace }.delete_if { |_key, value| value.nil? }
-    secret_response = client.get(uri,
-                                 headers: headers)
+    secret_response = client.get(uri, headers: headers)
     unless secret_response.success?
       message = "Received #{secret_response.code} response code from vault at #{uri} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
