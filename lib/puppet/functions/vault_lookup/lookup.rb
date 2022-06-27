@@ -4,8 +4,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'String', :vault_url
     optional_param 'Optional[String]', :vault_cert_path_segment
     optional_param 'String', :vault_cert_role
-    return_type 'Sensitive'
     optional_param 'String', :vault_namespace
+    return_type 'Sensitive'
   end
 
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
