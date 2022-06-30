@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v0.4.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.4.0) (2022-06-30)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.3.0...v0.4.0)
+
+**Implemented enhancements:**
+
+- Add support for Vault Namespaces [\#29](https://github.com/voxpupuli/puppet-vault_lookup/pull/29) ([Augustin-FL](https://github.com/Augustin-FL))
+
 ## [v0.3.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.3.0) (2022-06-30)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.2.0...v0.3.0)

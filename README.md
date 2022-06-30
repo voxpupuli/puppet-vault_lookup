@@ -1,8 +1,16 @@
-
 # vault_lookup
 
-Module to integrate Puppet 6 and Puppet Enterprise 2019 agents with Hashicorp
-Vault.
+[![Build Status](https://github.com/voxpupuli/puppet-vault_lookup/workflows/CI/badge.svg)](https://github.com/voxpupuli/puppet-vault_lookup/actions?query=workflow%3ACI)
+[![Release](https://github.com/voxpupuli/puppet-vault_lookup/actions/workflows/release.yml/badge.svg)](https://github.com/voxpupuli/puppet-vault_lookup/actions/workflows/release.yml)
+[![Puppet Forge](https://img.shields.io/puppetforge/v/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
+[![Puppet Forge - downloads](https://img.shields.io/puppetforge/dt/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
+[![Puppet Forge - endorsement](https://img.shields.io/puppetforge/e/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
+[![Puppet Forge - scores](https://img.shields.io/puppetforge/f/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
+[![puppetmodule.info docs](http://www.puppetmodule.info/images/badge.png)](http://www.puppetmodule.info/m/puppet-vault_lookup)
+[![Apache-2 License](https://img.shields.io/github/license/voxpupuli/puppet-vault_lookup.svg)](LICENSE)
+
+Module to integrate Puppet 6 (and newer) and Puppet Enterprise 2019 (and newer)
+agents with Hashicorp Vault.
 
 #### Table of Contents
 
