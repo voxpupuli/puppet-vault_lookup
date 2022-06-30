@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v0.3.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.3.0) (2022-06-30)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.2.0...v0.3.0)
+
+**Implemented enhancements:**
+
+- Update function for work with Vault secured with Letsencrypt certificates [\#44](https://github.com/voxpupuli/puppet-vault_lookup/issues/44)
+- \(MODULES-11321\) Use new Puppet http runtime; require Puppet 6.16 or newer [\#50](https://github.com/voxpupuli/puppet-vault_lookup/pull/50) ([tvpartytonight](https://github.com/tvpartytonight))
+
+**Closed issues:**
+
+- Error: Failed to apply catalog: undefined method `http\_ssl\_instance' for Puppet::Network::HttpPool:Module [\#39](https://github.com/voxpupuli/puppet-vault_lookup/issues/39)
+- Getting the following puppet deprecation when reusing your code [\#22](https://github.com/voxpupuli/puppet-vault_lookup/issues/22)
+
 ## [v0.2.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.2.0) (2021-09-19)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.1.1...v0.2.0)
