@@ -5,6 +5,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'Optional[String]', :vault_cert_path_segment
     optional_param 'String', :vault_cert_role
     optional_param 'String', :vault_namespace
+    optional_param 'String', :vault_key
     return_type 'Sensitive'
   end
 
@@ -14,7 +15,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
              vault_url = nil,
              vault_cert_path_segment = nil,
              vault_cert_role = nil,
-             vault_namespace = nil)
+             vault_namespace = nil,
+             vault_key = nil)
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -44,7 +46,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                                 vault_namespace)
 
     secret_uri = vault_base_uri + "/v1/#{path.delete_prefix('/')}"
-    data = get_secret(client, secret_uri, token, vault_namespace)
+    data = get_secret(client,
+                      secret_uri,
+                      token,
+                      vault_namespace,
+                      vault_key)
     Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
   end
 
@@ -58,7 +64,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
   end
 
-  def get_secret(client, uri, token, namespace)
+  def get_secret(client, uri, token, namespace, key)
     headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => namespace }.delete_if { |_key, value| value.nil? }
     secret_response = client.get(uri,
                                  headers: headers,
@@ -68,7 +74,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
     begin
-      JSON.parse(secret_response.body)['data']
+      if key.nil?
+        JSON.parse(secret_response.body)['data']
+      else
+        JSON.parse(secret_response.body)['data']['data'][key]
+      end
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
     end
