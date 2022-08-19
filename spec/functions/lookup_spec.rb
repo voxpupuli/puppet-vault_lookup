@@ -49,7 +49,7 @@ describe 'vault_lookup::lookup' do
     end
   end
 
-  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
+  it 'logs on, requests a kv1 secret using a token, and returns the data wrapped in the Sensitive type' do
     vault_server = MockVault.new
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
@@ -60,7 +60,7 @@ describe 'vault_lookup::lookup' do
     end
   end
 
-  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
+  it 'logs on, requests a kv2 secret using a token, and returns the data wrapped in the Sensitive type' do
     vault_server = MockVault.new
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccessKV2)

@@ -52,7 +52,7 @@ module PuppetVaultLookupHelpers
       "warnings": null
     }
     JSON
-                        .freeze
+                            .freeze
 
   AUTH_SUCCESS_DATA = <<~JSON
       {
