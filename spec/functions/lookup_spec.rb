@@ -65,7 +65,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccessKV2)
     vault_server.start_vault do |port|
-      result = function.execute('kv/test', "http://127.0.0.1:#{port}", '', '', '', "bar")
+      result = function.execute('kv/test', "http://127.0.0.1:#{port}", '', '', '', 'bar')
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('baz')
     end
