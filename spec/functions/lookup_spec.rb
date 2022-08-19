@@ -60,6 +60,17 @@ describe 'vault_lookup::lookup' do
     end
   end
 
+  it 'logs on, requests a secret using a token, and returns the data wrapped in the Sensitive type' do
+    vault_server = MockVault.new
+    vault_server.mount('/v1/auth/cert/login', AuthSuccess)
+    vault_server.mount('/v1/kv/test', SecretLookupSuccessKV2)
+    vault_server.start_vault do |port|
+      result = function.execute('kv/test', "http://127.0.0.1:#{port}", nil, nil, nil, "'bar")
+      expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result.unwrap).to eq('baz')
+    end
+  end
+
   it 'is successful when providing a cert_role while authenticating' do
     vault_server = MockVault.new
     vault_server.mount('/v1/auth/cert/login', AuthSuccessWithRole)

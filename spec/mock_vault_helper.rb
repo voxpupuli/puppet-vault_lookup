@@ -31,6 +31,29 @@ module PuppetVaultLookupHelpers
     JSON
                         .freeze
 
+  SECRET_SUCCESS_KV2_DATA = <<~JSON
+    {
+      "request_id": "36b0eadc-890b-1da7-b06d-36bda6a9d94d",
+      "lease_id": "",
+      "lease_duration": 0,
+      "renewable": false,
+      "data": {
+        "data": {
+          "bar": "baz"
+        },
+    "metadata": {
+          "created_time": "2022-07-21T12:38:39.082211175Z",
+          "custom_metadata": null,
+          "deletion_time": "",
+          "destroyed": false,
+          "version": 1
+        }
+      },
+      "warnings": null
+    }
+    JSON
+                        .freeze
+
   AUTH_SUCCESS_DATA = <<~JSON
       {
         "request_id": "03d11bd4-b994-c432-150f-5703a75641d1",
@@ -110,6 +133,14 @@ module PuppetVaultLookupHelpers
   class SecretLookupSuccess < WEBrick::HTTPServlet::AbstractServlet
     def do_GET(_request, response)
       response.body = SECRET_SUCCESS_DATA
+      response.status = 200
+      response.content_type = 'application/json'
+    end
+  end
+
+  class SecretLookupSuccessKV2 < WEBrick::HTTPServlet::AbstractServlet
+    def do_GET(_request, response)
+      response.body = SECRET_SUCCESS_KV2_DATA
       response.status = 200
       response.content_type = 'application/json'
     end
