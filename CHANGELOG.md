@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v0.5.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.5.0) (2022-08-22)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.4.0...v0.5.0)
+
+**Implemented enhancements:**
+
+- Kv2 support with a specified secret key [\#54](https://github.com/voxpupuli/puppet-vault_lookup/pull/54) ([firstnevyn](https://github.com/firstnevyn))
+- Feat: support retrieving secrets from non-puppet signed Vault listener [\#53](https://github.com/voxpupuli/puppet-vault_lookup/pull/53) ([firstnevyn](https://github.com/firstnevyn))
+
 ## [v0.4.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.4.0) (2022-06-30)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.3.0...v0.4.0)
