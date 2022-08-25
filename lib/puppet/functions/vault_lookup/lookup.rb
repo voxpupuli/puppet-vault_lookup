@@ -85,6 +85,12 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   end
 
   def get_cert_auth_token(client, vault_url, vault_cert_path_segment, vault_cert_role, vault_namespace)
+    x509 = Puppet::X509::CertProvider.new
+    cacerts = x509.load_cacerts_from_pem(File.read(Puppet[:localcacert], encoding: Encoding::UTF_8))
+    client_cert = x509.load_client_cert_from_pem(File.read(Puppet[:hostcert], encoding: Encoding::UTF_8))
+    private_key = x509.load_private_key_from_pem(File.read(Puppet[:hostprivkey], encoding: Encoding::UTF_8))
+    prov = Puppet::SSL::SSLProvider.new
+    ssl_context = prov.create_context(revocation: false, cacerts: cacerts, private_key: private_key, client_cert: client_cert, include_system_store: true, crls: [])
     role_data = auth_login_body(vault_cert_role)
     headers = { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
     segment = if vault_cert_path_segment.end_with?('/')
@@ -96,7 +102,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     response = client.post(login_url,
                            role_data,
                            headers: headers,
-                           options: { include_system_store: true })
+                           options: {  ssl_context: ssl_context })
     unless response.success?
       message = "Received #{response.code} response code from vault at #{login_url} for authentication"
       raise Puppet::Error, append_api_errors(message, response)
