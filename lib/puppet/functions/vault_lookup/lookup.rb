@@ -102,7 +102,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     response = client.post(login_url,
                            role_data,
                            headers: headers,
-                           options: {  ssl_context: ssl_context })
+                           options: { ssl_context: ssl_context })
     unless response.success?
       message = "Received #{response.code} response code from vault at #{login_url} for authentication"
       raise Puppet::Error, append_api_errors(message, response)
