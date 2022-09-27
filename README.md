@@ -97,7 +97,7 @@ role_id    XXXXX-XXXX-XXX-XX-XXXXXXXXXX
 ```
 
 ```
-# vault write -f auth/approle/bolt/bolt/secret-id
+# vault write -f auth/approle/role/puppet/secret-id
 Key                   Value
 ---                   -----
 secret_id             YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
