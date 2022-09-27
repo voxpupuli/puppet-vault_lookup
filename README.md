@@ -29,9 +29,9 @@ sees it. See [this blog
 post](https://puppet.com/blog/secret-agents-man-secrets-store-integrations-puppet-6)
 for more information and other secret store integrations.
 
-Authentication with Vault is achieved via Puppet certificates. See the
-Vault documentation for more information on setting up finer grained access
-controls.
+Authentication with Vault is achieved via Puppet certificates or by using the
+Approle authentication method. See the Vault documentation for more information
+on setting up finer grained access controls.
 
 ## Requirements
 
@@ -41,12 +41,12 @@ data.
 
 ## Setup
 
-The `vault_lookup` function uses the Puppet agent's certificates in order to
+### To set up Vault to use the Puppet Server CA cert:
+
+The `vault_lookup` function can use the Puppet agent's certificates in order to
 authenticate to the Vault server; this means that before any agents contact a
 Vault server, you must configure the Vault server with the Puppet Server's CA
 certificate, and Vault must be part of the same certificate infrastructure.
-
-To set up Vault to use the Puppet Server CA cert:
 
 1. Set up Vault using Puppet certs (if not already set up this way)
   If the Vault host has a Puppet agent on it then you can just use the existing
@@ -83,6 +83,37 @@ $ vault write auth/cert/certs/puppetserver \
 
 Once the certificate has been uploaded, any Puppet agent with a signed
 certificate will be able to authenticate with Vault.
+
+### To use AppRole Authentication
+
+`vault_lookup` can also use AppRole authentication to authenticate against Vault with a valid `role_id` and `secret_id`.  See [The Approle Vault Documentation](https://www.vaultproject.io/docs/auth/approle) for detailed explanations of creating and obtaining the security credentials.   You will need the Role ID (non sensitive) and the Secret ID (sensitive!).  The Secret ID can be provided as an argument to the `vault_lookup` function but it is recommended to pass this as an environment variable and not bake this into code.
+
+Example:
+```
+# vault read auth/approle/role/puppet/role-id
+Key        Value
+---        -----
+role_id    XXXXX-XXXX-XXX-XX-XXXXXXXXXX
+```
+
+```
+# vault write -f auth/approle/bolt/bolt/secret-id
+Key                   Value
+---                   -----
+secret_id             YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
+secret_id_accessor    ZZZZZ-ZZZZZZ-ZZZZZZ-ZZZZZZZZ-ZZZZ
+secret_id_ttl         0s
+```
+
+In order to use the AppRole auth engine you must set the `VAULT_AUTH_METHOD` environment variable (defaults to cert) to `approle`
+
+```
+export VAULT_AUTH_METHOD=approle
+export VAULT_ROLE_ID=XXXXX-XXXX-XXX-XX-XXXXXXXXXX
+export VAULT_SECRET_ID=YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
+```
+
+
 
 ## Usage
 
