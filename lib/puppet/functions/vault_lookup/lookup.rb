@@ -73,17 +73,15 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                                   vault_cert_role,
                                   vault_namespace)
     when 'approle'
-      raise Puppet::Error, "vault_role_id and VAULT_ROLE_ID are both nil" if vault_role_id.nil?
-      raise Puppet::Error, "vault_secret_id and VAULT_SECRET_ID are both nil" if vault_secret_id.nil?
+      raise Puppet::Error, 'vault_role_id and VAULT_ROLE_ID are both nil' if vault_role_id.nil?
+      raise Puppet::Error, 'vault_secret_id and VAULT_SECRET_ID are both nil' if vault_secret_id.nil?
       token = get_approle_auth_token(client,
-                                   vault_base_uri,
-                                   vault_approle_path_segment,
-                                   vault_role_id,
-                                   vault_secret_id,
-                                   vault_namespace)
+                                     vault_base_uri,
+                                     vault_approle_path_segment,
+                                     vault_role_id,
+                                     vault_secret_id,
+                                     vault_namespace)
     end
-
-
 
     secret_uri = vault_base_uri + "/v1/#{path.delete_prefix('/')}"
     data = get_secret(client,
@@ -132,7 +130,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                 vault_cert_path_segment + '/'
               end
     login_url = vault_url + segment + 'login'
-    get_token(client,login_url, role_data, vault_namespace)
+    get_token(client, login_url, role_data, vault_namespace)
   end
 
   def get_approle_auth_token(client, vault_url, path_segment, vault_role_id, vault_secret_id, vault_namespace)
@@ -144,7 +142,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     login_url = vault_url + path_segment + 'login'
     get_token(client, login_url, vault_request_data, vault_namespace)
   end
-
 
   def get_token(client, login_url, request_data, vault_namespace)
     headers = { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
@@ -167,7 +164,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
     token
   end
-
 
   def append_api_errors(message, response)
     errors   = json_parse(response, 'errors')
