@@ -6,17 +6,31 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'String', :vault_cert_role
     optional_param 'String', :vault_namespace
     optional_param 'String', :vault_key
+    optional_param 'Enum["cert", "approle"]', :vault_auth_method
+    optional_param 'String', :vault_role_id
+    optional_param 'String', :vault_secret_id
+    optional_param 'Optional[String]', :vault_approle_path_segment
     return_type 'Sensitive'
   end
 
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
+  DEFAULT_APPROLE_PATH_SEGMENT = 'v1/auth/approle/'.freeze
 
   def lookup(path,
              vault_url = nil,
              vault_cert_path_segment = nil,
              vault_cert_role = nil,
              vault_namespace = nil,
-             vault_key = nil)
+             vault_key = nil,
+             vault_auth_method = nil,
+             vault_role_id = nil,
+             vault_secret_id = nil,
+             vault_approle_path_segment = nil)
+
+    if vault_auth_method.nil?
+      vault_auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert'
+    end
+
     if vault_url.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_url = ENV['VAULT_ADDR']
@@ -27,10 +41,21 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       vault_namespace = ENV['VAULT_NAMESPACE']
     end
 
+    if vault_role_id.nil?
+      vault_role_id = ENV['VAULT_ROLE_ID']
+    end
+
+    if vault_secret_id.nil?
+      vault_secret_id = ENV['VAULT_SECRET_ID']
+    end
+
     if vault_cert_path_segment.nil?
       vault_cert_path_segment = DEFAULT_CERT_PATH_SEGMENT
     end
 
+    if vault_approle_path_segment.nil?
+      vault_approle_path_segment = DEFAULT_APPROLE_PATH_SEGMENT
+    end
     vault_base_uri = URI(vault_url)
     # URI is used here to parse the vault_url into a host string
     # and port; it's possible to generate a URI::Generic when a scheme
@@ -39,11 +64,24 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     raise Puppet::Error, "Unable to parse a hostname from #{vault_url}" unless vault_base_uri.hostname
 
     client = Puppet.runtime[:http]
-    token = get_cert_auth_token(client,
-                                vault_base_uri,
-                                vault_cert_path_segment,
-                                vault_cert_role,
-                                vault_namespace)
+
+    case vault_auth_method
+    when 'cert'
+      token = get_cert_auth_token(client,
+                                  vault_base_uri,
+                                  vault_cert_path_segment,
+                                  vault_cert_role,
+                                  vault_namespace)
+    when 'approle'
+      raise Puppet::Error, 'vault_role_id and VAULT_ROLE_ID are both nil' if vault_role_id.nil?
+      raise Puppet::Error, 'vault_secret_id and VAULT_SECRET_ID are both nil' if vault_secret_id.nil?
+      token = get_approle_auth_token(client,
+                                     vault_base_uri,
+                                     vault_approle_path_segment,
+                                     vault_role_id,
+                                     vault_secret_id,
+                                     vault_namespace)
+    end
 
     secret_uri = vault_base_uri + "/v1/#{path.delete_prefix('/')}"
     data = get_secret(client,
@@ -86,15 +124,29 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
 
   def get_cert_auth_token(client, vault_url, vault_cert_path_segment, vault_cert_role, vault_namespace)
     role_data = auth_login_body(vault_cert_role)
-    headers = { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
     segment = if vault_cert_path_segment.end_with?('/')
                 vault_cert_path_segment
               else
                 vault_cert_path_segment + '/'
               end
     login_url = vault_url + segment + 'login'
+    get_token(client, login_url, role_data, vault_namespace)
+  end
+
+  def get_approle_auth_token(client, vault_url, path_segment, vault_role_id, vault_secret_id, vault_namespace)
+    vault_request_data = {
+      role_id: vault_role_id,
+      secret_id: vault_secret_id
+    }.to_json
+
+    login_url = vault_url + path_segment + 'login'
+    get_token(client, login_url, vault_request_data, vault_namespace)
+  end
+
+  def get_token(client, login_url, request_data, vault_namespace)
+    headers = { 'Content-Type' => 'application/json', 'X-Vault-Namespace' => vault_namespace }.delete_if { |_key, value| value.nil? }
     response = client.post(login_url,
-                           role_data,
+                           request_data,
                            headers: headers,
                            options: { include_system_store: true })
     unless response.success?
