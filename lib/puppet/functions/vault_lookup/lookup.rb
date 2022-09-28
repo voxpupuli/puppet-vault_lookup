@@ -89,9 +89,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                       token,
                       vault_namespace,
                       vault_key)
-    unless data.nil?
-      Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
-    end
+
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data) unless data.nil?
   end
 
   private
