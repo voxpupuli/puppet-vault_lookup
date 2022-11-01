@@ -4,7 +4,15 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
-## [v0.5.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.5.0) (2022-08-22)
+## [v0.6.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.6.0) (2022-09-27)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.5.0...v0.6.0)
+
+**Implemented enhancements:**
+
+- Add AppRole Authentication  [\#59](https://github.com/voxpupuli/puppet-vault_lookup/pull/59) ([crayfishx](https://github.com/crayfishx))
+
+## [v0.5.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.5.0) (2022-08-23)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.4.0...v0.5.0)
 
