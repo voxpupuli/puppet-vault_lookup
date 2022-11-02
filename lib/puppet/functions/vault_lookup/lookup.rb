@@ -10,7 +10,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     optional_param 'String', :vault_role_id
     optional_param 'String', :vault_secret_id
     optional_param 'Optional[String]', :vault_approle_path_segment
-    return_type 'Sensitive'
+    return_type 'Optional[Sensitive]'
   end
 
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
@@ -89,7 +89,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                       token,
                       vault_namespace,
                       vault_key)
-    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+
+    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data) unless data.nil?
   end
 
   private
@@ -107,6 +108,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     secret_response = client.get(uri,
                                  headers: headers,
                                  options: { include_system_store: true })
+
+    return nil if secret_response.code == 404
     unless secret_response.success?
       message = "Received #{secret_response.code} response code from vault at #{uri} for secret lookup"
       raise Puppet::Error, append_api_errors(message, secret_response)
