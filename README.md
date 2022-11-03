@@ -163,7 +163,7 @@ In both cases, the path to the secret is the first positional argument and is re
 
 Positional arguments signature:
 ```
-vault::vault_lookup( <path>, [<vault_url>], [<vault_cert_path_segment>], [<vault_cert_role>], [<vault_namespace>], [<vault_key>], [<vault_auth_method>], [<vault_role_id>], [<vault_secret_id>], [<vault_approle_path_segment>] )
+vault::vault_lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>] )
 ```
 
 Options hash signature:
@@ -183,10 +183,10 @@ $data_2a = vault::vault_lookup('secret/db/blah', 'https://vault.corp.net:8200', 
 # Options hash
 $data_1b = vault::vault_lookup('secret/db/password', { 'vault_addr' => 'https://vault.corp.net:8200' })
 $data_2b = vault::vault_lookup('secret/db/blah', {
-  'vault_addr'        => 'https://vault.corp.net:8200',
-  'vault_auth_method' => 'approle',
-  'vault_role_id'     => 'team_a',
-  'vault_secret_id'   => 'abcd1234!@#',
+  'vault_addr'  => 'https://vault.corp.net:8200',
+  'auth_method' => 'approle',
+  'role_id'     => 'team_a',
+  'secret_id'   => 'abcd1234!@#',
 })
 ```
 
