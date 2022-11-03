@@ -9,12 +9,20 @@ describe 'vault_lookup::lookup' do
     expect {
       function.execute('/v1/whatever', 'vault.docker')
     }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
+
+    expect {
+      function.execute('/v1/whatever', 'vault_addr' => 'vault.docker')
+    }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
   end
 
-  it 'errors when no vault_url set and no VAULT_ADDR environment variable' do
+  it 'errors when no vault_addr set and no VAULT_ADDR environment variable' do
     expect {
       function.execute('/v1/whatever')
-    }.to raise_error(Puppet::Error, %r{No vault_url given and VAULT_ADDR env variable not set})
+    }.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
+
+    expect {
+      function.execute('/v1/whatever', {})
+    }.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
   end
 
   it 'raises a Puppet error when auth fails' do
@@ -23,6 +31,10 @@ describe 'vault_lookup::lookup' do
     vault_server.start_vault do |port|
       expect {
         function.execute('thepath', "http://127.0.0.1:#{port}")
+      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+
+      expect {
+        function.execute('thepath', 'vault_addr' => "http://127.0.0.1:#{port}")
       }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
     end
   end
@@ -35,6 +47,10 @@ describe 'vault_lookup::lookup' do
       expect {
         function.execute('kv/test', "http://127.0.0.1:#{port}")
       }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
+
+      expect {
+        function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
+      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
     end
   end
 
@@ -45,6 +61,10 @@ describe 'vault_lookup::lookup' do
     vault_server.start_vault do |port|
       expect {
         function.execute('kv/test', "http://127.0.0.1:#{port}")
+      }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
+
+      expect {
+        function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
     end
   end
@@ -57,6 +77,10 @@ describe 'vault_lookup::lookup' do
       result = function.execute('kv/test', "http://127.0.0.1:#{port}")
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('foo' => 'bar')
+
+      result_opts = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
+      expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_opts.unwrap).to eq('foo' => 'bar')
     end
   end
 
@@ -69,6 +93,10 @@ describe 'vault_lookup::lookup' do
       result = function.execute('kv/test', "http://127.0.0.1:#{port}", custom_auth_segment, '', '', 'bar')
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('baz')
+
+      result_opts = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'cert_path_segment' => custom_auth_segment, 'field' => 'bar')
+      expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_opts.unwrap).to eq('baz')
     end
   end
 
@@ -80,6 +108,14 @@ describe 'vault_lookup::lookup' do
       result = function.execute('kv/test', "http://127.0.0.1:#{port}", nil, 'test-cert-role')
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('foo' => 'bar')
+
+      opts = {
+        'vault_addr' => "http://127.0.0.1:#{port}",
+        'cert_role' => 'test-cert-role'
+      }
+      result_opts = function.execute('kv/test', opts)
+      expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_opts.unwrap).to eq('foo' => 'bar')
     end
   end
 
@@ -92,6 +128,10 @@ describe 'vault_lookup::lookup' do
       result = function.execute('kv/test', "http://127.0.0.1:#{port}", custom_auth_segment)
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('foo' => 'bar')
+
+      result_opts = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'cert_path_segment' => custom_auth_segment)
+      expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_opts.unwrap).to eq('foo' => 'bar')
     end
   end
 
