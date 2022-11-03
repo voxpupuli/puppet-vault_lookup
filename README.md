@@ -43,10 +43,11 @@ data.
 
 ### To set up Vault to use the Puppet Server CA cert:
 
-The `vault_lookup` function can use the Puppet agent's certificates in order to
-authenticate to the Vault server; this means that before any agents contact a
-Vault server, you must configure the Vault server with the Puppet Server's CA
-certificate, and Vault must be part of the same certificate infrastructure.
+The `vault::vault_lookup()` function can use the Puppet agent's certificates in
+order to authenticate to the Vault server; this means that before any agents
+contact a Vault server, you must configure the Vault server with the Puppet
+Server's CA certificate, and Vault must be part of the same certificate
+infrastructure.
 
 1. Set up Vault using Puppet certs (if not already set up this way)
   If the Vault host has a Puppet agent on it then you can just use the existing
@@ -63,8 +64,9 @@ puppetserver ca generate --certname my-vault.my-domain.me
 
 2. Enable cert auth for Vault
   Hashicorp’s Vault supports a variety of auth methods that are listed in their
-  documentation; the auth method required for usage with the vault_lookup
-  function is named cert, and can be turned on with the Vault CLI:
+  documentation; the auth method required for usage with the
+  `vault:vault_lookup()` function is named cert, and can be turned on with the
+  Vault CLI:
 
 ```
 $ vault auth enable cert
@@ -86,7 +88,7 @@ certificate will be able to authenticate with Vault.
 
 ### To use AppRole Authentication
 
-`vault_lookup` can also use AppRole authentication to authenticate against Vault with a valid `role_id` and `secret_id`.  See [The Approle Vault Documentation](https://www.vaultproject.io/docs/auth/approle) for detailed explanations of creating and obtaining the security credentials.   You will need the Role ID (non sensitive) and the Secret ID (sensitive!).  The Secret ID can be provided as an argument to the `vault_lookup` function but it is recommended to pass this as an environment variable and not bake this into code.
+`vault:vault_lookup()` can also use AppRole authentication to authenticate against Vault with a valid `role_id` and `secret_id`.  See [The Approle Vault Documentation](https://www.vaultproject.io/docs/auth/approle) for detailed explanations of creating and obtaining the security credentials.   You will need the Role ID (non sensitive) and the Secret ID (sensitive!).  The Secret ID can be provided as an argument to the `vault:vault_lookup()` function but it is recommended to pass this as an environment variable and not bake this into code.
 
 Example:
 ```
@@ -120,8 +122,8 @@ export VAULT_SECRET_ID=YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
 Install this module as you would in any other; the necessary code will
 be distributed to Puppet agents via pluginsync.
 
-In your manifests, call the `vault_lookup::lookup` function using the Deferred
-type. For example:
+In your manifests, call the `vault_lookup::lookup()` function using the
+Deferred type. For example:
 
 ```puppet
 $d = Deferred('vault_lookup::lookup', ["secret/test", 'https://vault.hostname:8200'])
