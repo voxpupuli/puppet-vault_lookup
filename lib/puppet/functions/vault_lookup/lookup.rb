@@ -13,9 +13,44 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     return_type 'Sensitive'
   end
 
+  dispatch :lookup_opts_hash do
+    # Allows for passing a hash of options to the vault::vault_lookup() function.
+    #
+    # @example
+    #  $foo = vault::lookup('secret/some/path/foo',
+    #    {'vault_url' => 'https://vault.corp.net:8200', 'auth_method' => 'cert'}
+    #  )
+    #
+    param 'String[1]', :path
+    param 'Hash[String[1], Data]', :options
+    return_type 'Sensitive'
+  end
+
+  # Lookup with a path and an options hash.
+  def lookup_opts_hash(path, options = {})
+    # NOTE: The order of these options MUST be the same as the lookup()
+    # function's signature. If new parameters are added to lookup(), or if the
+    # order of existing parameters change, those changes must also be made
+    # here.
+    lookup(path,
+           options['vault_url'],
+           options['vault_cert_path_segment'],
+           options['vault_cert_role'],
+           options['vault_namespace'],
+           options['vault_key'],
+           options['vault_auth_method'],
+           options['vault_role_id'],
+           options['vault_secret_id'],
+           options['vault_approle_path_segment'])
+  end
+
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
   DEFAULT_APPROLE_PATH_SEGMENT = 'v1/auth/approle/'.freeze
 
+  # Lookup with a path and positional arguments.
+  # NOTE: If new parameters are added, or if the order of existing parameters
+  # change, those changes must also be made to the lookup() call in
+  # lookup_opts_hash().
   def lookup(path,
              vault_url = nil,
              vault_cert_path_segment = nil,
