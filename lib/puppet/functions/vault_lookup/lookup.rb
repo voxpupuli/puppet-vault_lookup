@@ -108,8 +108,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                                   cert_role,
                                   namespace)
     when 'approle'
-      raise Puppet::Error, 'role_id and VAULT_ROLE_ID are both nil' if vault_role_id.nil?
-      raise Puppet::Error, 'secret_id and VAULT_SECRET_ID are both nil' if vault_secret_id.nil?
+      raise Puppet::Error, 'role_id and VAULT_ROLE_ID are both nil' if role_id.nil?
+      raise Puppet::Error, 'secret_id and VAULT_SECRET_ID are both nil' if secret_id.nil?
       token = get_approle_auth_token(client,
                                      vault_base_uri,
                                      approle_path_segment,
