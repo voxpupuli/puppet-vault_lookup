@@ -150,7 +150,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
       if key.nil?
         JSON.parse(secret_response.body)['data']
       else
-        JSON.parse(secret_response.body)['data']['data'][key]
+        JSON.parse(secret_response.body)['data'][key]
       end
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'
