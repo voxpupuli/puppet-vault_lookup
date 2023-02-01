@@ -148,7 +148,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     end
     begin
       if key.nil?
-        JSON.parse(secret_response.body)['data']
+        JSON.parse(secret_response.body)['data']['data']
       else
         JSON.parse(secret_response.body)['data']['data'][key]
       end
