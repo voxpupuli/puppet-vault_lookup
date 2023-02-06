@@ -1,5 +1,6 @@
-Puppet::Functions.create_function(:'vault_lookup::lookup') do
+Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::InternalFunction) do
   dispatch :lookup do
+    cache_param
     param 'String', :path
     optional_param 'String', :vault_addr
     optional_param 'Optional[String]', :cert_path_segment
@@ -13,26 +14,28 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
     return_type 'Sensitive'
   end
 
+  # Allows for passing a hash of options to the vault::vault_lookup() function.
+  #
+  # @example
+  #  $foo = vault::lookup('secret/some/path/foo',
+  #    {'vault_addr' => 'https://vault.corp.net:8200', 'auth_method' => 'cert'}
+  #  )
+  #
   dispatch :lookup_opts_hash do
-    # Allows for passing a hash of options to the vault::vault_lookup() function.
-    #
-    # @example
-    #  $foo = vault::lookup('secret/some/path/foo',
-    #    {'vault_addr' => 'https://vault.corp.net:8200', 'auth_method' => 'cert'}
-    #  )
-    #
+    cache_param
     param 'String[1]', :path
     param 'Hash[String[1], Data]', :options
     return_type 'Sensitive'
   end
 
   # Lookup with a path and an options hash.
-  def lookup_opts_hash(path, options = {})
+  def lookup_opts_hash(cache, path, options = {})
     # NOTE: The order of these options MUST be the same as the lookup()
     # function's signature. If new parameters are added to lookup(), or if the
     # order of existing parameters change, those changes must also be made
     # here.
-    lookup(path,
+    lookup(cache,
+           path,
            options['vault_addr'],
            options['cert_path_segment'],
            options['cert_role'],
@@ -51,7 +54,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
   # NOTE: If new parameters are added, or if the order of existing parameters
   # change, those changes must also be made to the lookup() call in
   # lookup_opts_hash().
-  def lookup(path,
+  def lookup(cache,
+             path,
              vault_addr = nil,
              cert_path_segment = nil,
              cert_role = nil,
@@ -62,18 +66,30 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
              secret_id = nil,
              approle_path_segment = nil)
 
-    if auth_method.nil?
-      auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert'
-    end
-
     if vault_addr.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
       vault_addr = ENV['VAULT_ADDR']
       raise Puppet::Error, 'No vault_addr given and VAULT_ADDR env variable not set' if vault_addr.nil?
     end
+
     if namespace.nil?
       Puppet.debug 'No Vault namespace was set on function, defaulting to value from VAULT_NAMESPACE env value'
       namespace = ENV['VAULT_NAMESPACE']
+    end
+
+    # Check the cache.
+    # The path, vault_addr, and namepsace fields could result in a different
+    # secret value, so use them for the cache key.
+    cache_key = [path, vault_addr, namespace]
+    cache_hash = cache.retrieve(self)
+    prior_result = cache_hash[cache_key]
+    unless prior_result.nil?
+      Puppet.debug "Using cached result for #{path}: #{prior_result}"
+      return prior_result
+    end
+
+    if auth_method.nil?
+      auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert'
     end
 
     if role_id.nil?
@@ -124,7 +140,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup') do
                       token,
                       namespace,
                       field)
-    Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+
+    sensitive_data = Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
+    Puppet.debug "Caching found data for #{path}"
+    cache_hash[cache_key] = sensitive_data
+    sensitive_data
   end
 
   private
