@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::InternalFunction) do
   dispatch :lookup do
     cache_param
@@ -49,9 +51,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
            options['agent_sink_file'])
   end
 
-  DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
-  DEFAULT_APPROLE_PATH_SEGMENT = 'v1/auth/approle/'.freeze
-
   # Lookup with a path and positional arguments.
   # NOTE: If new parameters are added, or if the order of existing parameters
   # change, those changes must also be made to the lookup() call in
@@ -91,30 +90,17 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
       return prior_result
     end
 
-    if auth_method.nil?
-      auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert'
-    end
+    auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert' if auth_method.nil?
+    role_id = ENV['VAULT_ROLE_ID'] if role_id.nil?
+    secret_id = ENV['VAULT_SECRET_ID'] if secret_id.nil?
+    cert_path_segment = 'v1/auth/cert' if cert_path_segment.nil?
+    approle_path_segment = 'v1/auth/approle/' if approle_path_segment.nil?
 
-    if role_id.nil?
-      role_id = ENV['VAULT_ROLE_ID']
-    end
-
-    if secret_id.nil?
-      secret_id = ENV['VAULT_SECRET_ID']
-    end
-
-    if cert_path_segment.nil?
-      cert_path_segment = DEFAULT_CERT_PATH_SEGMENT
-    end
-
-    if approle_path_segment.nil?
-      approle_path_segment = DEFAULT_APPROLE_PATH_SEGMENT
-    end
-    vault_base_uri = URI(vault_addr)
     # URI is used here to parse the vault_addr into a host string
     # and port; it's possible to generate a URI::Generic when a scheme
     # is not defined, so double check here to make sure at least
     # host is defined.
+    vault_base_uri = URI(vault_addr)
     raise Puppet::Error, "Unable to parse a hostname from #{vault_addr}" unless vault_base_uri.hostname
 
     client = Puppet.runtime[:http]
@@ -129,6 +115,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     when 'approle'
       raise Puppet::Error, 'role_id and VAULT_ROLE_ID are both nil' if role_id.nil?
       raise Puppet::Error, 'secret_id and VAULT_SECRET_ID are both nil' if secret_id.nil?
+
       token = get_approle_auth_token(client,
                                      vault_base_uri,
                                      approle_path_segment,
@@ -151,6 +138,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
         agent_sink_file = ENV['VAULT_AGENT_SINK_FILE']
       end
       raise Puppet::Error, 'agent_sink_file must be defined when using the agent_sink auth method' if agent_sink_file.nil?
+
       token = read_token_from_sink(sink: agent_sink_file)
     end
 
@@ -202,9 +190,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     segment = if cert_path_segment.end_with?('/')
                 cert_path_segment
               else
-                cert_path_segment + '/'
+                "#{cert_path_segment}/"
               end
-    login_url = vault_addr + segment + 'login'
+    login_url = vault_addr + segment + 'login' # rubocop:disable Style/StringConcatenation
     get_token(client, login_url, role_data, namespace)
   end
 
@@ -214,7 +202,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
       secret_id: secret_id
     }.to_json
 
-    login_url = vault_addr + path_segment + 'login'
+    login_url = vault_addr + path_segment + 'login' # rubocop:disable Style/StringConcatenation
     get_token(client, login_url, vault_request_data, namespace)
   end
 
@@ -243,9 +231,11 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
   def append_api_errors(message, response)
     errors   = json_parse(response, 'errors')
     warnings = json_parse(response, 'warnings')
-    message << " (api errors: #{errors})" if errors
-    message << " (api warnings: #{warnings})" if warnings
-    message
+    # Can't modify frozen String, so we copy.
+    copy = message.dup
+    copy << " (api errors: #{errors})" if errors
+    copy << " (api warnings: #{warnings})" if warnings
+    copy
   end
 
   def json_parse(response, field)
@@ -256,6 +246,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
 
   def read_token_from_sink(sink:)
     raise Puppet::Error, "The agent_sink_file does not exist or is not readable: #{sink}" unless Puppet::FileSystem.exist?(sink)
+
     Puppet::FileSystem.read(sink).chomp
   end
 end

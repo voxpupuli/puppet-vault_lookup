@@ -1,41 +1,43 @@
+# frozen_string_literal: true
+
 require 'spec_helper'
 require 'mock_vault_helper'
 
-include PuppetVaultLookupHelpers
+include PuppetVaultLookupHelpers  # rubocop:disable Style/MixinUsage
 describe 'vault_lookup::lookup' do
   let(:function) { subject }
 
   it 'errors for malformed uri' do
-    expect {
+    expect do
       function.execute('/v1/whatever', 'vault.docker')
-    }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
+    end.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
 
-    expect {
+    expect do
       function.execute('/v1/whatever', 'vault_addr' => 'vault.docker')
-    }.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
+    end.to raise_error(Puppet::Error, %r{Unable to parse a hostname})
   end
 
   it 'errors when no vault_addr set and no VAULT_ADDR environment variable' do
-    expect {
+    expect do
       function.execute('/v1/whatever')
-    }.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
+    end.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
 
-    expect {
+    expect do
       function.execute('/v1/whatever', {})
-    }.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
+    end.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
   end
 
   it 'raises a Puppet error when auth fails' do
     vault_server = MockVault.new
     vault_server.mount('/v1/auth/cert/login', AuthFailure)
     vault_server.start_vault do |port|
-      expect {
+      expect do
         function.execute('thepath', "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+      end.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
 
-      expect {
+      expect do
         function.execute('thepath', 'vault_addr' => "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
+      end.to raise_error(Puppet::Error, %r{Received 403 response code from vault.*invalid certificate or no client certificate supplied})
     end
   end
 
@@ -44,13 +46,13 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupDenied)
     vault_server.start_vault do |port|
-      expect {
+      expect do
         function.execute('kv/test', "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
+      end.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
 
-      expect {
+      expect do
         function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
+      end.to raise_error(Puppet::Error, %r{Received 403 response code from vault at .* for secret lookup.*permission denied})
     end
   end
 
@@ -59,13 +61,13 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupWarning)
     vault_server.start_vault do |port|
-      expect {
+      expect do
         function.execute('kv/test', "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
+      end.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
 
-      expect {
+      expect do
         function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
-      }.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
+      end.to raise_error(Puppet::Error, %r{Received 404 response code from vault at .* for secret lookup.*Invalid path for a versioned K/V secrets engine})
     end
   end
 
@@ -165,7 +167,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(1).time
+      allow(function.func).to receive(:get_secret).and_call_original.exactly(1).time
       result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
@@ -183,7 +185,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(3).times
+      allow(function.func).to receive(:get_secret).and_call_original.exactly(3).times
       result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'foo')
       result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'bar')
       result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'baz')
@@ -202,11 +204,14 @@ describe 'vault_lookup::lookup' do
       vault_server.mount('/v1/kv/test', SecretLookupSuccess)
       vault_server.start_vault do |port|
         stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => "http://127.0.0.1:#{port}", 'VAULT_AUTH_METHOD' => 'agent'))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
-        expect(function.func).to receive(:get_secret).with(hash_including(token: nil)).and_call_original
+        allow(function.func).to receive(:get_approle_auth_token).and_call_original
+        allow(function.func).to receive(:get_cert_auth_token).and_call_original
+        allow(function.func).to receive(:get_secret).with(hash_including(token: nil)).and_call_original
         result = function.execute('kv/test')
 
+        expect(function.func).not_to have_received(:get_approle_auth_token)
+        expect(function.func).not_to have_received(:get_cert_auth_token)
+        expect(function.func).to have_received(:get_secret).with(hash_including(token: nil))
         expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
         expect(result.unwrap).to eq('foo' => 'bar')
       end
@@ -223,14 +228,16 @@ describe 'vault_lookup::lookup' do
         stub_const('ENV', ENV.to_hash.merge(
                             'VAULT_ADDR' => "http://127.0.0.1:#{port}",
                             'VAULT_AUTH_METHOD' => 'agent_sink',
-                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
-        ))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file
+                          ))
+        allow(function.func).to receive(:get_approle_auth_token)
+        allow(function.func).to receive(:get_cert_auth_token)
 
-        expect {
+        expect(function.func).not_to have_received(:get_approle_auth_token)
+        expect(function.func).not_to have_received(:get_cert_auth_token)
+        expect do
           function.execute('kv/test')
-        }.to raise_error(Puppet::Error, %r{The agent_sink_file does not exist})
+        end.to raise_error(Puppet::Error, %r{The agent_sink_file does not exist})
       end
     end
 
@@ -241,14 +248,19 @@ describe 'vault_lookup::lookup' do
         stub_const('ENV', ENV.to_hash.merge(
                             'VAULT_ADDR' => "http://127.0.0.1:#{port}",
                             'VAULT_AUTH_METHOD' => 'agent_sink',
-                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
-        ))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
-        expect(function.func).to receive(:read_token_from_sink).with(sink: agent_sink_file).and_return('abcdefg')
-        expect(function.func).to receive(:get_secret).with(hash_including(token: 'abcdefg')).and_call_original
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file
+                          ))
+        allow(function.func).to receive(:get_approle_auth_token)
+        allow(function.func).to receive(:get_cert_auth_token)
+        allow(function.func).to receive(:read_token_from_sink).with(sink: agent_sink_file).and_return('abcdefg')
+        allow(function.func).to receive(:get_secret).with(hash_including(token: 'abcdefg')).and_call_original
+
         result = function.execute('kv/test')
 
+        expect(function.func).not_to have_received(:get_approle_auth_token)
+        expect(function.func).not_to have_received(:get_cert_auth_token)
+        expect(function.func).to have_received(:read_token_from_sink).with(sink: agent_sink_file)
+        expect(function.func).to have_received(:get_secret).with(hash_including(token: 'abcdefg'))
         expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
         expect(result.unwrap).to eq('foo' => 'bar')
       end
