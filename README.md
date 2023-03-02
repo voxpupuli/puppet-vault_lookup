@@ -15,106 +15,34 @@ agents with Hashicorp Vault.
 #### Table of Contents
 
 1. [Description](#description)
-2. [Setup - The basics of getting started with vault_lookup](#setup)
-3. [Usage - Configuration options and additional functionality](#usage)
+2. [Requirements](#setup)
+3. [Usage, Configuration, and Examples](#usage)
+4. [Authentication Methods](#authentication-methods)
 
 ## Description
 
-For users with a Puppet Enterprise 2019 or open source Puppet 6 infrastructure
-wanting to leverage secrets from an existing [Hashicorp
-Vault](https://www.vaultproject.io/) server. Used with Puppet 6's Deferred type,
-this allows agents to retrieve secrets from Vault when a catalog is applied. In
-this way, the secret data is not embedded in the catalog and the master never
-sees it. See [this blog
-post](https://puppet.com/blog/secret-agents-man-secrets-store-integrations-puppet-6)
-for more information and other secret store integrations.
+For Puppet 6+ or Puppet Enterprise 2019+ users wanting to use secrets from
+[Hashicorp Vault](https://www.vaultproject.io/) on their Puppet agents, this
+Puppet module provides the `vault_lookup::lookup()` function.
 
-Authentication with Vault is achieved via Puppet certificates or by using the
-Approle authentication method. See the Vault documentation for more information
-on setting up finer grained access controls.
+When used with Puppet 6's [`Deferred`
+type](https://puppet.com/docs/puppet/7/deferring_functions.html), the function
+allows agents to retrieve secrets from Vault when a catalog is applied rather
+than compiled. In this way, the secret data is not embedded in the catalog and
+the Puppetserver does not need permissions to read all your Vault secrets.
+
 
 ## Requirements
 
-This is expected to be run using the `Deferred` type, which requires Puppet
-6.0.0 or later, and of course [Vault](https://www.vaultproject.io/) to store the
-data.
+This modules assumes the following:
+1. Puppet 6+
+2. An existing [Vault](https://www.vaultproject.io/) infrastructure
 
-## Setup
+The `vault_lookup::lookup()` function is expected to be run with the `Deferred`
+type; as such, Puppet 6 or later is required.
 
-### To set up Vault to use the Puppet Server CA cert:
-
-The `vault::vault_lookup()` function can use the Puppet agent's certificates in
-order to authenticate to the Vault server; this means that before any agents
-contact a Vault server, you must configure the Vault server with the Puppet
-Server's CA certificate, and Vault must be part of the same certificate
-infrastructure.
-
-1. Set up Vault using Puppet certs (if not already set up this way)
-  If the Vault host has a Puppet agent on it then you can just use the existing
-  certificates. Otherwise generate a new certificate with `puppetserver ca` and
-  copy the files.
-
-```
-puppetserver ca generate --certname my-vault.my-domain.me
-```
-
-  In the Vault listener configuration, set `tls_client_ca_file` as the Puppet CA
-  cert, `tls_cert_file` as the agent or generated certificate, and
-  `tls_key_file` as the agent or generated private key.
-
-2. Enable cert auth for Vault
-  Hashicorp’s Vault supports a variety of auth methods that are listed in their
-  documentation; the auth method required for usage with the
-  `vault:vault_lookup()` function is named cert, and can be turned on with the
-  Vault CLI:
-
-```
-$ vault auth enable cert
-```
-3. Upload the Puppet Server CA certificate to Vault.
-  After cert auth has been enabled for Vault, upload the CA certificate from
-  your Puppet Server to Vault and add it as a trusted certificate.
-
-```
-$ vault write auth/cert/certs/puppetserver \
-    display_name=puppet \
-    policies=prod,test \
-    certificate=@/path/to/puppetserver/ca.pem \
-    ttl=3600
-```
-
-Once the certificate has been uploaded, any Puppet agent with a signed
-certificate will be able to authenticate with Vault.
-
-### To use AppRole Authentication
-
-`vault:vault_lookup()` can also use AppRole authentication to authenticate against Vault with a valid `role_id` and `secret_id`.  See [The Approle Vault Documentation](https://www.vaultproject.io/docs/auth/approle) for detailed explanations of creating and obtaining the security credentials.   You will need the Role ID (non sensitive) and the Secret ID (sensitive!).  The Secret ID can be provided as an argument to the `vault:vault_lookup()` function but it is recommended to pass this as an environment variable and not bake this into code.
-
-Example:
-```
-# vault read auth/approle/role/puppet/role-id
-Key        Value
----        -----
-role_id    XXXXX-XXXX-XXX-XX-XXXXXXXXXX
-```
-
-```
-# vault write -f auth/approle/role/puppet/secret-id
-Key                   Value
----                   -----
-secret_id             YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
-secret_id_accessor    ZZZZZ-ZZZZZZ-ZZZZZZ-ZZZZZZZZ-ZZZZ
-secret_id_ttl         0s
-```
-
-In order to use the AppRole auth engine you must set the `VAULT_AUTH_METHOD` environment variable (defaults to cert) to `approle`
-
-```
-export VAULT_AUTH_METHOD=approle
-export VAULT_ROLE_ID=XXXXX-XXXX-XXX-XX-XXXXXXXXXX
-export VAULT_SECRET_ID=YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
-```
-
+And as this function is meant to read secrets from Vault, an existing Vault
+infrastructure is assumed to be up and reachable by your Puppet agents.
 
 
 ## Usage
@@ -157,37 +85,80 @@ node default {
 
 ### Configuring the Vault lookup
 
-The lookup done by `vault::vault_lookup()` can be configured in two ways: positional arguments or with a hash of options.
+The lookup done by `vault_lookup::lookup()` can be configured in three ways:
+positional arguments, a hash of options,  and/or environment variables.
 
-In both cases, the path to the secret is the first positional argument and is required. All other arguments are optional.
+In all cases, the path to the secret is the first positional argument and is
+required. All other arguments are optional. Arguments in `[square brackets]`
+below are optional.
 
-Positional arguments signature:
+#### Positional Arguments
+
 ```
-vault::vault_lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>] )
+vault_lookup::lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>] )
 ```
 
-Options hash signature:
+#### Options Hash
+
 ```
-vault::vault_lookup( <path>, [<options_hash>] )
+vault_lookup::lookup( <path>, [<options_hash>] )
 ```
 
-Arguments in `[square brackets]` are optional.
+#### Environment Variables
 
+Not all options can be set with environment variables. Use the table below to find the matching env var, if available. Also note that environment variables are only used if the option is not supplied to the function.
+
+  | Option Name | Environment Variable |
+  | ----------- | -------------------- |
+  | `vault_addr`           | `VAULT_ADDR`            |
+  | `cert_path_segment`    | ----                    |
+  | `cert_role`            | ----                    |
+  | `namespace`            | `VAULT_NAMESPACE`       |
+  | `field`                | ----                    |
+  | `auth_method`          | `VAULT_AUTH_METHOD`     |
+  | `role_id`              | `VAULT_ROLE_ID`         |
+  | `secret_id`            | `VAULT_SECRET_ID`       |
+  | `approle_path_segment` | ----                    |
+
+
+### Usage Examples
 
 Here are some examples of each method:
-```
+```puppet
 # Positional arguments
-$data_1a = vault::vault_lookup('secret/db/password', 'https://vault.corp.net:8200')
-$data_2a = vault::vault_lookup('secret/db/blah', 'https://vault.corp.net:8200', undef, undef, undef, undef, 'approle', 'team_a', 'abcd1234!@#')
 
+## Using the default 'cert' auth method.
+$data_1a = vault_lookup::lookup('secret/db/password', 'https://vault.corp.net:8200')
+
+## Using the 'approle' auth method.
+$data_2a = vault_lookup::lookup('secret/db/blah', 'https://vault.corp.net:8200', undef, undef, undef, undef, 'approle', 'team_a', 'abcd1234!@#')
+
+## Pulling out a specific field.
+$password = vault_lookup::lookup('secret/test', 'http://vault.corp.net:8200', undef, undef, undef, 'password')
+```
+
+```puppet
 # Options hash
-$data_1b = vault::vault_lookup('secret/db/password', { 'vault_addr' => 'https://vault.corp.net:8200' })
-$data_2b = vault::vault_lookup('secret/db/blah', {
+
+## Using the default 'cert' auth method.
+$data_1b = vault_lookup::lookup('secret/db/password', { 'vault_addr' => 'https://vault.corp.net:8200' })
+
+## Using the 'approle' auth method.
+$data_2b = vault_lookup::lookup('secret/db/blah', {
   'vault_addr'  => 'https://vault.corp.net:8200',
   'auth_method' => 'approle',
   'role_id'     => 'team_a',
   'secret_id'   => 'abcd1234!@#',
 })
+
+# Using 'field' to pull out a specific field from the data.
+$password = vault_lookup::lookup('secret/test', {'vault_addr' => 'http://127.0.0.1:8200', 'field' => 'password'})
+
+# Using Deferred is simpler with the options hash.
+$password_deferred = Deferred('vault_lookup::lookup', ["secret/test", {
+  vault_addr => 'http://127.0.0.1:8200',
+  field      => 'password',
+}])
 ```
 
 ### A note about caching
@@ -259,5 +230,96 @@ file { '/etc/db.conf':
 notify { 'show the dev namespace DB password':
   message => $db_password_namespaced,
 }
+```
+
+## Authentication Methods
+
+The `vault_lookup::lookup()` function can authenticate to Vault in a number of ways. This table shows the currently supported `auth_method` types:
+
+| `auth_method` | Description |
+| --- | --- |
+|  `cert`       | (this is the default) Uses the Puppet agent's certificate via the [TLS Certificates](https://developer.hashicorp.com/vault/docs/auth/cert) auth method. |
+|  `approle`    | Uses the [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) auth method. |
+
+
+### Puppetserver CA and agent certificates
+
+The `vault_lookup::lookup()` function by default will use the Puppet agent's
+certificates to authenticate to the Vault server. This means that before any
+agents contact a Vault server, you must configure the Vault server with the
+Puppet Server's CA certificate, and Vault must be part of the same certificate
+infrastructure.
+
+1. Set up Vault using Puppet certs (if not already set up this way). If the
+   Vault host has a Puppet agent on it then you can just its existing host
+   certificates. Otherwise generate a new certificate with `puppetserver ca`
+   and copy the files.
+
+   ```
+   $ puppetserver ca generate --certname my-vault.my-domain.me
+   ```
+
+   In the Vault listener configuration, set `tls_client_ca_file` as the Puppet
+   CA cert, `tls_cert_file` as the agent's or generated certificate, and
+   `tls_key_file` as the agent's or generated private key.
+
+2. Enable the `cert` auth backend in Vault.
+
+   ```
+   $ vault auth enable cert
+   ```
+
+3. Upload the Puppet Server CA certificate to Vault. After `cert` auth has been
+   enabled for Vault, upload the CA certificate from your Puppet Server to
+   Vault, and add it as a trusted certificate.
+
+   ```
+   $ vault write auth/cert/certs/puppetserver \
+       display_name=puppet \
+       policies=prod,test \
+       certificate=@/path/to/puppetserver/ca.pem \
+       ttl=3600
+   ```
+
+
+Once the certificate has been uploaded, any Puppet agent with a signed
+certificate will be able to authenticate with Vault.
+
+### AppRole
+
+`vault:vault_lookup()` can also use AppRole authentication to authenticate
+against Vault with a valid `role_id` and `secret_id`. See [The Approle Vault
+Documentation](https://www.vaultproject.io/docs/auth/approle) for detailed
+explanations of creating and obtaining the security credentials. You will need
+the Role ID (non sensitive) and the Secret ID (sensitive!). The Secret ID can
+be provided as an argument to the `vault:vault_lookup()` function but it is
+recommended to pass this as an environment variable and not bake this into
+code.
+
+Example:
+```
+$ vault read auth/approle/role/puppet/role-id
+Key        Value
+---        -----
+role_id    XXXXX-XXXX-XXX-XX-XXXXXXXXXX
+```
+
+```
+# vault write -f auth/approle/role/puppet/secret-id
+Key                   Value
+---                   -----
+secret_id             YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
+secret_id_accessor    ZZZZZ-ZZZZZZ-ZZZZZZ-ZZZZZZZZ-ZZZZ
+secret_id_ttl         0s
+```
+
+In order to use the AppRole auth method, either set the `VAULT_AUTH_METHOD`
+environment variable on the Puppet process to `approle` or set the
+`auth_method` option to `approle` when calling the function:
+
+```shell
+export VAULT_AUTH_METHOD=approle
+export VAULT_ROLE_ID=XXXXX-XXXX-XXX-XX-XXXXXXXXXX
+export VAULT_SECRET_ID=YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
 ```
 
