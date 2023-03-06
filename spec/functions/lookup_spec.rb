@@ -195,4 +195,63 @@ describe 'vault_lookup::lookup' do
       expect(result1.unwrap).to eq(result3.unwrap)
     end
   end
+
+  context 'when using the agent auth method' do
+    it 'a token header is not used' do
+      vault_server = MockVault.new
+      vault_server.mount('/v1/kv/test', SecretLookupSuccess)
+      vault_server.start_vault do |port|
+        stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => "http://127.0.0.1:#{port}", 'VAULT_AUTH_METHOD' => 'agent'))
+        expect(function.func).not_to receive(:get_approle_auth_token)
+        expect(function.func).not_to receive(:get_cert_auth_token)
+        expect(function.func).to receive(:get_secret).with(hash_including(token: nil)).and_call_original
+        result = function.execute('kv/test')
+
+        expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+        expect(result.unwrap).to eq('foo' => 'bar')
+      end
+    end
+  end
+
+  context 'when using the agent_sing auth method' do
+    let(:agent_sink_file) { '/tmp/vault_agent_sink' }
+
+    it 'errors when token sink file does not exist' do
+      vault_server = MockVault.new
+      vault_server.mount('/v1/kv/test', SecretLookupSuccess)
+      vault_server.start_vault do |port|
+        stub_const('ENV', ENV.to_hash.merge(
+                            'VAULT_ADDR' => "http://127.0.0.1:#{port}",
+                            'VAULT_AUTH_METHOD' => 'agent_sink',
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
+        ))
+        expect(function.func).not_to receive(:get_approle_auth_token)
+        expect(function.func).not_to receive(:get_cert_auth_token)
+
+        expect {
+          function.execute('kv/test')
+        }.to raise_error(Puppet::Error, %r{The agent_sink_file does not exist})
+      end
+    end
+
+    it 'a token is read from the token sink' do
+      vault_server = MockVault.new
+      vault_server.mount('/v1/kv/test', SecretLookupSuccess)
+      vault_server.start_vault do |port|
+        stub_const('ENV', ENV.to_hash.merge(
+                            'VAULT_ADDR' => "http://127.0.0.1:#{port}",
+                            'VAULT_AUTH_METHOD' => 'agent_sink',
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
+        ))
+        expect(function.func).not_to receive(:get_approle_auth_token)
+        expect(function.func).not_to receive(:get_cert_auth_token)
+        expect(function.func).to receive(:read_token_from_sink).with(sink: agent_sink_file).and_return('abcdefg')
+        expect(function.func).to receive(:get_secret).with(hash_including(token: 'abcdefg')).and_call_original
+        result = function.execute('kv/test')
+
+        expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+        expect(result.unwrap).to eq('foo' => 'bar')
+      end
+    end
+  end
 end

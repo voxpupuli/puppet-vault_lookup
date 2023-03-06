@@ -95,7 +95,7 @@ below are optional.
 #### Positional Arguments
 
 ```
-vault_lookup::lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>] )
+vault_lookup::lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>], [<agent_sink_file>] )
 ```
 
 #### Options Hash
@@ -119,6 +119,7 @@ Not all options can be set with environment variables. Use the table below to fi
   | `role_id`              | `VAULT_ROLE_ID`         |
   | `secret_id`            | `VAULT_SECRET_ID`       |
   | `approle_path_segment` | ----                    |
+  | `agent_sink_file`      | `VAULT_AGENT_SINK_FILE` |
 
 
 ### Usage Examples
@@ -240,6 +241,8 @@ The `vault_lookup::lookup()` function can authenticate to Vault in a number of w
 | --- | --- |
 |  `cert`       | (this is the default) Uses the Puppet agent's certificate via the [TLS Certificates](https://developer.hashicorp.com/vault/docs/auth/cert) auth method. |
 |  `approle`    | Uses the [AppRole](https://developer.hashicorp.com/vault/docs/auth/approle) auth method. |
+|  `agent`      | Uses a local Vault Agent's [auto-auth token](https://developer.hashicorp.com/vault/docs/agent/caching#using-auto-auth-token) and caching proxy. |
+|  `agent_sink` | Uses a local Vault Agent's [auto-auth file sink](https://developer.hashicorp.com/vault/docs/agent/autoauth/sinks/file). |
 
 
 ### Puppetserver CA and agent certificates
@@ -322,4 +325,124 @@ export VAULT_AUTH_METHOD=approle
 export VAULT_ROLE_ID=XXXXX-XXXX-XXX-XX-XXXXXXXXXX
 export VAULT_SECRET_ID=YYYYY-YYYY-YYY-YY-YYYYYYYYYYY
 ```
+
+### Vault Agent: auto-auth token
+
+This method of authentication relies on a local Vault Agent running on the
+Puppet agent host. The Vault Agent handles authenticating to your Vault server,
+and the `vault_lookup::lookup()` function just needs to make requests through
+the local Vault Agent's caching proxy. The Vault Agent in this scenario must be
+using Auto Auth, have Caching enabled, and have `use_auto_auth_token` set to
+`true`.
+
+<https://developer.hashicorp.com/vault/docs/agent/caching#using-auto-auth-token>
+
+An example Vault Agent config for this scenario is shown below:
+```hcl
+vault {
+  address = "https://vault.corp.net:8200"
+}
+
+listener "tcp" {
+  address = "127.0.0.1:8100"
+  tls_disable = true
+}
+
+auto_auth {
+  # Some type of auto_auth configuration from:
+  # https://developer.hashicorp.com/vault/docs/agent/autoauth
+}
+
+cache {
+  use_auto_auth_token = true
+}
+```
+
+And here's how the `vault_lookup::lookup()` function can be used to talk to the
+local Vault agent and use its token for authentication:
+```puppet
+# Talk to the local Vault Agent that has "use_auto_auth_token = true"
+$data = Deferred('vault_lookup::lookup', ["secret/test", {
+  vault_addr  => 'http://127.0.0.1:8200',
+  auth_method => 'agent',
+  field       => 'password',
+}])
+
+file { '/tmp/secret_data.txt':
+  ensure  => file,
+  owner   => 'app',
+  group   => 'app',
+  mode    => '0440',
+  content => $data,
+}
+```
+
+A benefit of this method is that is uses the Vault Agent's cached token rather
+than generating a new token for each call of the function. This reduces the
+load on your Vault servers as token generation can be an expensive operation.
+
+### Vault Agent: auto-auth file sink
+
+This method of authentication relies on a local Vault Agent running on the
+Puppet agent host. The Vault Agent handles authenticating to your Vault server,
+and the `vault_lookup::lookup()` function reads the cached token from a sink
+file managed by the Vault Agent. Optionally, the lookup could also talk through
+your Vault Agent's caching proxy if enabled.
+
+The Vault Agent in this scenario must be using Auto Auth and an **unencrypted, non-response-wrapped** File Sink for the token.
+
+<https://developer.hashicorp.com/vault/docs/agent/autoauth/sinks/file>
+
+An example Vault Agent config for this scenario is shown below:
+```hcl
+vault {
+  address = "https://vault.corp.net:8200"
+}
+
+# The listener is optional here, but could be used for the 'vault_addr' in
+# the vault_lookup::lookup() Puppet function.
+listener "tcp" {
+  address     = "127.0.0.1:8100"
+  tls_disable = true
+}
+
+auto_auth {
+  # Some type of auto_auth method from:
+  # https://developer.hashicorp.com/vault/docs/agent/autoauth/methods
+  method { }
+
+  sink {
+    type = "file"
+    config = {
+      path = "/path/to/vault-token
+    }
+  }
+}
+```
+
+And here's how the `vault_lookup::lookup()` function can be configured to use
+the token from the auto-auth file sink for authentication:
+```puppet
+# Use the token from the local Vault Agent's auto-auth file sink.
+$data = Deferred('vault_lookup::lookup', ["secret/test", {
+  # This doesn't have to be the local Vault agent's proxy, but using it can
+  # provide additional caching.
+  vault_addr      => 'http://127.0.0.1:8200',
+  auth_method     => 'agent_sink',
+  agent_sink_file => '/path/to/vault-token',
+  field           => 'password',
+}])
+
+file { '/tmp/secret_data.txt':
+  ensure  => file,
+  owner   => 'app',
+  group   => 'app',
+  mode    => '0440',
+  content => $data,
+}
+```
+
+A benefit of this method is that is uses the Vault Agent's cached token rather
+than generating a new token for each call of the function. This reduces the
+load on your Vault servers as token generation can be an expensive operation.
 

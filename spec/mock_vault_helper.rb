@@ -3,30 +3,30 @@ require 'webrick'
 module PuppetVaultLookupHelpers
   SECRETS_WARNING_DATA = <<~JSON
     {
-    	"request_id": "0971a3db-f77a-4b0f-224d-35ff3e05d23d",
-    	"lease_id": "",
-    	"renewable": false,
-    	"lease_duration": 0,
-    	"data": null,
-    	"wrap_info": null,
-    	"warnings": ["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use \'vault kv get\' for this operation."],
-    	"auth": null
+      "request_id": "0971a3db-f77a-4b0f-224d-35ff3e05d23d",
+      "lease_id": "",
+      "renewable": false,
+      "lease_duration": 0,
+      "data": null,
+      "wrap_info": null,
+      "warnings": ["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use \'vault kv get\' for this operation."],
+      "auth": null
     }
   JSON
                          .freeze
 
   SECRET_SUCCESS_DATA = <<~JSON
     {
-    	"request_id": "e394e8ef-78f3-ac85-fbeb-33f060e911d4",
-    	"lease_id": "",
-    	"renewable": false,
-    	"lease_duration": 604800,
-    	"data": {
-    		"foo": "bar"
-    	},
-    	"wrap_info": null,
-    	"warnings": null,
-    	"auth": null
+      "request_id": "e394e8ef-78f3-ac85-fbeb-33f060e911d4",
+      "lease_id": "",
+      "renewable": false,
+      "lease_duration": 604800,
+      "data": {
+        "foo": "bar"
+      },
+      "wrap_info": null,
+      "warnings": null,
+      "auth": null
     }
     JSON
                         .freeze

@@ -7,14 +7,15 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     optional_param 'String', :cert_role
     optional_param 'String', :namespace
     optional_param 'String', :field
-    optional_param 'Enum["cert", "approle"]', :auth_method
+    optional_param 'Enum["cert", "approle", "agent", "agent_sink"]', :auth_method
     optional_param 'String', :role_id
     optional_param 'String', :secret_id
     optional_param 'Optional[String]', :approle_path_segment
+    optional_param 'String', :agent_sink_file
     return_type 'Sensitive'
   end
 
-  # Allows for passing a hash of options to the vault::vault_lookup() function.
+  # Allows for passing a hash of options to the vault_lookup::lookup() function.
   #
   # @example
   #  $foo = vault::lookup('secret/some/path/foo',
@@ -44,7 +45,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
            options['auth_method'],
            options['role_id'],
            options['secret_id'],
-           options['approle_path_segment'])
+           options['approle_path_segment'],
+           options['agent_sink_file'])
   end
 
   DEFAULT_CERT_PATH_SEGMENT = 'v1/auth/cert/'.freeze
@@ -64,7 +66,8 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
              auth_method = nil,
              role_id = nil,
              secret_id = nil,
-             approle_path_segment = nil)
+             approle_path_segment = nil,
+             agent_sink_file = nil)
 
     if vault_addr.nil?
       Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
@@ -132,14 +135,31 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
                                      role_id,
                                      secret_id,
                                      namespace)
+    when 'agent'
+      # Setting the token to nil causes the 'X-Vault-Token' header to not be
+      # added by this function when making requests to Vault. Instead, we're
+      # relying on the local Vault agent's cache to add the token into the
+      # headers of our request. This assumes that 'use_auto_auth_token = true'
+      # is in the Vault agent's cache config.
+      # @see https://developer.hashicorp.com/vault/docs/agent/caching#using-auto-auth-token
+      token = nil
+    when 'agent_sink'
+      # This assumes the token is availble in a sink file populated by the Vault Agent.
+      # @see https://developer.hashicorp.com/vault/docs/agent/autoauth/sinks/file
+      if agent_sink_file.nil?
+        Puppet.debug "No agent sink file was set on function, defaulting to VAULT_AGENT_SINK_FILE env var: #{ENV['VAULT_AGENT_SINK_FILE']}"
+        agent_sink_file = ENV['VAULT_AGENT_SINK_FILE']
+      end
+      raise Puppet::Error, 'agent_sink_file must be defined when using the agent_sink auth method' if agent_sink_file.nil?
+      token = read_token_from_sink(sink: agent_sink_file)
     end
 
     secret_uri = vault_base_uri + "/v1/#{path.delete_prefix('/')}"
-    data = get_secret(client,
-                      secret_uri,
-                      token,
-                      namespace,
-                      field)
+    data = get_secret(client: client,
+                      uri: secret_uri,
+                      token: token,
+                      namespace: namespace,
+                      key: field)
 
     sensitive_data = Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
     Puppet.debug "Caching found data for #{path}"
@@ -157,7 +177,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     end
   end
 
-  def get_secret(client, uri, token, namespace, key)
+  def get_secret(client:, uri:, token:, namespace:, key:)
     headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => namespace }.delete_if { |_key, value| value.nil? }
     secret_response = client.get(uri,
                                  headers: headers,
@@ -232,5 +252,10 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     JSON.parse(response.body)[field]
   rescue StandardError
     nil
+  end
+
+  def read_token_from_sink(sink:)
+    raise Puppet::Error, "The agent_sink_file does not exist or is not readable: #{sink}" unless Puppet::FileSystem.exist?(sink)
+    Puppet::FileSystem.read(sink).chomp
   end
 end
