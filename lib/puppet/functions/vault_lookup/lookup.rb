@@ -191,7 +191,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
 
   private
 
-<<<<<<< HEAD
   def get_auth_token(connection, local_token, local_token_file)
     if local_token
       begin
