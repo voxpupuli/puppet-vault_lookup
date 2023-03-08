@@ -28,6 +28,7 @@ default_crl_days  = 30
 # SHA-1 is deprecated, so use SHA-2 instead.
 default_md        = sha256
 
+copy_extensions   = copy
 name_opt          = ca_default
 cert_opt          = ca_default
 default_days      = 375

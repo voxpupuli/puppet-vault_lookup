@@ -1,4 +1,4 @@
-FROM alpine:3.8
+FROM alpine:3.9
 
 
 # Install openssl
@@ -50,6 +50,7 @@ RUN openssl genrsa -out intermediate/private/vault.key.pem 2048
 RUN openssl req -config intermediate/openssl.cnf \
       -key intermediate/private/vault.key.pem \
       -subj "/CN=vault.local" \
+      -addext "subjectAltName = DNS:vault.local" \
       -new -sha256 -out intermediate/csr/vault.csr.pem
 RUN openssl ca -config intermediate/openssl.cnf \
       -extensions server_cert -days 375 -batch -notext -md sha256 \
