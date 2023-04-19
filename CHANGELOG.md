@@ -4,7 +4,29 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
-## [v0.6.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.6.0) (2022-09-27)
+## [v0.7.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.7.0) (2023-04-19)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.6.0...v0.7.0)
+
+**Implemented enhancements:**
+
+- Add new auth methods: agent, agent\_sink [\#66](https://github.com/voxpupuli/puppet-vault_lookup/pull/66) ([natemccurdy](https://github.com/natemccurdy))
+- Cache the result of a lookup [\#65](https://github.com/voxpupuli/puppet-vault_lookup/pull/65) ([natemccurdy](https://github.com/natemccurdy))
+- Allow for setting lookup options with a hash instead of positional arguments [\#64](https://github.com/voxpupuli/puppet-vault_lookup/pull/64) ([natemccurdy](https://github.com/natemccurdy))
+
+**Closed issues:**
+
+- Retreiving a field value fails. [\#69](https://github.com/voxpupuli/puppet-vault_lookup/issues/69)
+- undefined local variable or method 'vault\_role\_id' [\#68](https://github.com/voxpupuli/puppet-vault_lookup/issues/68)
+- \[Feature Request\] Ability not to do cert auth login as part of lookup [\#24](https://github.com/voxpupuli/puppet-vault_lookup/issues/24)
+- Add local vault mode [\#7](https://github.com/voxpupuli/puppet-vault_lookup/issues/7)
+
+**Merged pull requests:**
+
+- README updates: more examples, explain auth methods [\#73](https://github.com/voxpupuli/puppet-vault_lookup/pull/73) ([natemccurdy](https://github.com/natemccurdy))
+- Correction vault\_role\_id and vault\_secret\_id missing [\#67](https://github.com/voxpupuli/puppet-vault_lookup/pull/67) ([phaedriel](https://github.com/phaedriel))
+
+## [v0.6.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.6.0) (2022-11-01)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.5.0...v0.6.0)
 
