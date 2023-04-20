@@ -162,77 +162,6 @@ $password_deferred = Deferred('vault_lookup::lookup', ["secret/test", {
 }])
 ```
 
-### A note about caching
-
-The `vault_lookup::lookup()` function caches the result of a lookup and will
-use that cached result for the life of the catalog application (when using
-`Deferred`) or catalog compilation (when not using `Deferred`).
-
-Looked up values are cached based on a combination of their:
-* Path in the Vault URI
-* Vault Address
-* Namespace
-
-This means that you can call `vault_lookup::lookup()` multiple times for the
-same piece of data or refer to the same `Deferred` value multiple times and
-there will only be a single fetch from Vault. This helps to reduce the amount
-of back-and-forth network traffic to your Vault cluster.
-
-For example, in the code below, due to caching, the `secret/db/password` value
-is only looked up once even though the function is called twice:
-
-```puppet
-# Wrap the function in Deferred, and save it to a variable.
-#
-# Since the path, vault_addr, and namespace don't change, only one Vault lookup
-# will be made regardless of how many times the $db_password variable is used.
-#
-$db_password = Deferred('vault_lookup::lookup', [
-  'secret/db/password',
-  {'vault_addr' => 'https://vault.corp.net:8200'},
-])
-
-# Call the deferred function once.
-file { '/etc/db.conf':
-  ensure  => file,
-  content => $db_password,
-}
-
-# Call the deferred function twice.
-notify { 'show the DB password':
-  message => $db_password,
-}
-```
-
-But if the path, the Vault address, or the namespace change, a new lookup to
-Vault will happen. For example, in the code below, even though the path is the
-same in both of these lookups (`secret/db/password`), the namespace is
-different, so a separate lookup will be made rather than the cached value from
-the first lookup of `secret/db/password` being used.
-
-```puppet
-# Fetch a value from Vault without using a namespace.
-$db_password = Deferred('vault_lookup::lookup', [
-  'secret/db/password',
-  {'vault_addr' => 'https://vault.corp.net:8200'},
-])
-
-# Fetch a value from Vault in the 'dev' namespace.
-$db_password_namespaced = Deferred('vault_lookup::lookup', [
-  'secret/db/password',
-  {'vault_addr' => 'https://vault.corp.net:8200', 'namespace' => 'dev'},
-])
-
-file { '/etc/db.conf':
-  ensure  => file,
-  content => $db_password,
-}
-
-notify { 'show the dev namespace DB password':
-  message => $db_password_namespaced,
-}
-```
-
 ## Authentication Methods
 
 The `vault_lookup::lookup()` function can authenticate to Vault in a number of ways. This table shows the currently supported `auth_method` types:
@@ -445,4 +374,3 @@ file { '/tmp/secret_data.txt':
 A benefit of this method is that is uses the Vault Agent's cached token rather
 than generating a new token for each call of the function. This reduces the
 load on your Vault servers as token generation can be an expensive operation.
-

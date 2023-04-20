@@ -160,42 +160,6 @@ describe 'vault_lookup::lookup' do
     end
   end
 
-  it 'caches the result when the same lookup is done more than once per catalog' do
-    vault_server = MockVault.new
-    vault_server.mount('/v1/auth/cert/login', AuthSuccess)
-    vault_server.mount('/v1/kv/test', SecretLookupSuccess)
-    vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(1).time
-      result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
-      result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
-      result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
-
-      expect(result1).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-      expect(result2).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-      expect(result1.unwrap).to eq('foo' => 'bar')
-      expect(result1.unwrap).to eq(result2.unwrap)
-      expect(result1.unwrap).to eq(result3.unwrap)
-    end
-  end
-
-  it 'builds the cache_key correctly' do
-    vault_server = MockVault.new
-    vault_server.mount('/v1/auth/cert/login', AuthSuccess)
-    vault_server.mount('/v1/kv/test', SecretLookupSuccess)
-    vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(3).times
-      result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'foo')
-      result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'bar')
-      result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'baz')
-
-      expect(result1).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-      expect(result2).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
-      expect(result1.unwrap).to eq('foo' => 'bar')
-      expect(result1.unwrap).to eq(result2.unwrap)
-      expect(result1.unwrap).to eq(result3.unwrap)
-    end
-  end
-
   context 'when using the agent auth method' do
     it 'a token header is not used' do
       vault_server = MockVault.new
