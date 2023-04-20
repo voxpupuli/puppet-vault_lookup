@@ -83,7 +83,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     # Check the cache.
     # The path, vault_addr, and namepsace fields could result in a different
     # secret value, so use them for the cache key.
-    cache_key = [path, vault_addr, namespace]
+    cache_key = [path, vault_addr, namespace, field]
     cache_hash = cache.retrieve(self)
     prior_result = cache_hash[cache_key]
     unless prior_result.nil?
@@ -187,10 +187,16 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
       raise Puppet::Error, append_api_errors(message, secret_response)
     end
     begin
-      if key.nil?
-        JSON.parse(secret_response.body)['data']
+      json_data = JSON.parse(secret_response.body)
+      puts "KEY=#{key} DATA=#{json_data}"
+      if key.nil? && json_data['data'].key?('data')
+        json_data['data']['data']
+      elsif key.nil?
+        json_data['data']
+      elsif json_data['data'].key?('data')
+        json_data['data']['data'][key]
       else
-        JSON.parse(secret_response.body)['data']['data'][key]
+        json_data['data'][key]
       end
     rescue StandardError
       raise Puppet::Error, 'Error parsing json secret data from vault response'

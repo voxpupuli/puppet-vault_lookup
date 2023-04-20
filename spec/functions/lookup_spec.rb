@@ -81,6 +81,10 @@ describe 'vault_lookup::lookup' do
       result_opts = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result_opts.unwrap).to eq('foo' => 'bar')
+
+      result_field = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'field' => 'foo')
+      expect(result_field).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_field.unwrap).to eq('bar')
     end
   end
 
@@ -97,6 +101,10 @@ describe 'vault_lookup::lookup' do
       result_opts = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'cert_path_segment' => custom_auth_segment, 'field' => 'bar')
       expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result_opts.unwrap).to eq('baz')
+
+      result_no_field = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'cert_path_segment' => custom_auth_segment)
+      expect(result_no_field).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
+      expect(result_no_field.unwrap).to eq('bar' => 'baz')
     end
   end
 
