@@ -173,7 +173,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(1).time
+      expect(PuppetX::VaultLookup::Lookup).to receive(:get_secret).and_call_original.exactly(1).time
       result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
       result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}")
@@ -191,7 +191,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
-      expect(function.func).to receive(:get_secret).and_call_original.exactly(3).times
+      expect(PuppetX::VaultLookup::Lookup).to receive(:get_secret).and_call_original.exactly(3).times
       result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'foo')
       result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'bar')
       result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'baz')
@@ -210,9 +210,9 @@ describe 'vault_lookup::lookup' do
       vault_server.mount('/v1/kv/test', SecretLookupSuccess)
       vault_server.start_vault do |port|
         stub_const('ENV', ENV.to_hash.merge('VAULT_ADDR' => "http://127.0.0.1:#{port}", 'VAULT_AUTH_METHOD' => 'agent'))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
-        expect(function.func).to receive(:get_secret).with(hash_including(token: nil)).and_call_original
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_approle_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_cert_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).to receive(:get_secret).with(hash_including(token: nil)).and_call_original
         result = function.execute('kv/test')
 
         expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
@@ -233,8 +233,8 @@ describe 'vault_lookup::lookup' do
                             'VAULT_AUTH_METHOD' => 'agent_sink',
                             'VAULT_AGENT_SINK_FILE' => agent_sink_file,
         ))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_approle_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_cert_auth_token)
 
         expect {
           function.execute('kv/test')
@@ -251,10 +251,10 @@ describe 'vault_lookup::lookup' do
                             'VAULT_AUTH_METHOD' => 'agent_sink',
                             'VAULT_AGENT_SINK_FILE' => agent_sink_file,
         ))
-        expect(function.func).not_to receive(:get_approle_auth_token)
-        expect(function.func).not_to receive(:get_cert_auth_token)
-        expect(function.func).to receive(:read_token_from_sink).with(sink: agent_sink_file).and_return('abcdefg')
-        expect(function.func).to receive(:get_secret).with(hash_including(token: 'abcdefg')).and_call_original
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_approle_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).not_to receive(:get_cert_auth_token)
+        expect(PuppetX::VaultLookup::Lookup).to receive(:read_token_from_sink).with(sink: agent_sink_file).and_return('abcdefg')
+        expect(PuppetX::VaultLookup::Lookup).to receive(:get_secret).with(hash_including(token: 'abcdefg')).and_call_original
         result = function.execute('kv/test')
 
         expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
