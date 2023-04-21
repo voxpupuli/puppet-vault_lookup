@@ -172,6 +172,7 @@ Looked up values are cached based on a combination of their:
 * Path in the Vault URI
 * Vault Address
 * Namespace
+* Field
 
 This means that you can call `vault_lookup::lookup()` multiple times for the
 same piece of data or refer to the same `Deferred` value multiple times and
