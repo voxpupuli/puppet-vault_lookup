@@ -188,7 +188,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     end
     begin
       json_data = JSON.parse(secret_response.body)
-      puts "KEY=#{key} DATA=#{json_data}"
       if key.nil? && json_data['data'].key?('data')
         json_data['data']['data']
       elsif key.nil?
