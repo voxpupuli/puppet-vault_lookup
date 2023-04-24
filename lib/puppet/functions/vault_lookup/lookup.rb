@@ -1,5 +1,13 @@
 Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::InternalFunction) do
   dispatch :lookup do
+    required_param 'String', :path
+    optional_param 'String', :vault_url
+    optional_param 'Variant[Boolean, String]', :local_token
+    optional_param 'String', :local_token_file
+  end
+
+  def lookup(path, vault_url = nil, local_token = false, local_token_file = '/etc/vault.token')
+    if vault_url.nil?
     cache_param
     param 'String', :path
     optional_param 'String', :vault_addr
@@ -117,6 +125,20 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     # host is defined.
     raise Puppet::Error, "Unable to parse a hostname from #{vault_addr}" unless vault_base_uri.hostname
 
+    use_ssl = uri.scheme == 'https'
+    context = if use_ssl
+                Puppet::SSL::SSLContext.new
+              else
+                nil
+              end
+    connection = Puppet::Network::HttpPool.connection(uri.host, uri.port, use_ssl: use_ssl, ssl_context: context)
+
+    token = get_auth_token(connection, local_token, local_token_file)
+
+    secret_response = connection.get("/v1/#{path}", 'X-Vault-Token' => token)
+    unless secret_response.is_a?(Net::HTTPOK)
+      message = "Received #{secret_response.code} response code from vault at #{uri.host} for secret lookup"
+      raise Puppet::Error, append_api_errors(message, secret_response)
     client = Puppet.runtime[:http]
 
     case auth_method
@@ -169,6 +191,13 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
 
   private
 
+  def get_auth_token(connection, local_token, local_token_file)
+    if local_token
+      begin
+        token = Puppet::FileSystem.read(local_token_file)
+      rescue
+        raise Puppet::Error, "Unable to read #{local_token_file}"
+      end
   def auth_login_body(cert_role)
     if cert_role
       { name: cert_role }.to_json
@@ -234,12 +263,19 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
       raise Puppet::Error, append_api_errors(message, response)
     end
 
-    begin
-      token = JSON.parse(response.body)['auth']['client_token']
-    rescue StandardError
-      raise Puppet::Error, 'Unable to parse client_token from vault response'
-    end
+    else
+      response = connection.post('/v1/auth/cert/login', '')
+      unless response.is_a?(Net::HTTPOK)
+        message = "Received #{response.code} response code from vault at #{connection.address} for authentication"
+        raise Puppet::Error, append_api_errors(message, response)
+      end
 
+      begin
+        token = JSON.parse(response.body)['auth']['client_token']
+      rescue StandardError
+        raise Puppet::Error, 'Unable to parse client_token from vault response'
+      end
+    end
     raise Puppet::Error, 'No client_token found' if token.nil?
 
     token
