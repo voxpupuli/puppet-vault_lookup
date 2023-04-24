@@ -1,6 +1,6 @@
 {
   "name": "puppet-vault_lookup",
-  "version": "0.7.1-rc0",
+  "version": "1.0.0",
   "author": "Vox Pupuli",
   "summary": "Secret retrieval from Vault",
   "license": "Apache-2.0",
@@ -12,7 +12,8 @@
     {
       "operatingsystem": "CentOS",
       "operatingsystemrelease": [
-        "7"
+        "7",
+        "8"
       ]
     },
     {
@@ -24,7 +25,9 @@
     {
       "operatingsystem": "RedHat",
       "operatingsystemrelease": [
-        "7"
+        "7",
+        "8",
+        "9"
       ]
     },
     {
@@ -36,13 +39,17 @@
     {
       "operatingsystem": "Debian",
       "operatingsystemrelease": [
-        "8"
+        "9",
+        "10",
+        "11"
       ]
     },
     {
       "operatingsystem": "Ubuntu",
       "operatingsystemrelease": [
-        "16.04"
+        "18.04",
+        "20.04",
+        "22.04"
       ]
     },
     {
@@ -50,6 +57,7 @@
       "operatingsystemrelease": [
         "2008 R2",
         "2012 R2",
+        "2016",
         "10"
       ]
     },
@@ -62,13 +70,18 @@
     {
       "operatingsystem": "Fedora",
       "operatingsystemrelease": [
-        "25"
+        "36",
+        "37",
+        "38"
       ]
     },
     {
       "operatingsystem": "Darwin",
       "operatingsystemrelease": [
-        "16"
+        "16",
+        "17",
+        "18",
+        "19"
       ]
     },
     {

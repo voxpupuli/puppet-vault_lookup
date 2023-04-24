@@ -4,6 +4,27 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v1.0.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v1.0.0) (2023-05-01)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.7.0...v1.0.0)
+
+**Breaking changes:**
+
+- Drop Puppet 6 support [\#81](https://github.com/voxpupuli/puppet-vault_lookup/pull/81) ([bastelfreak](https://github.com/bastelfreak))
+
+**Implemented enhancements:**
+
+- Allow field to be used with v1 data format [\#76](https://github.com/voxpupuli/puppet-vault_lookup/pull/76) ([treydock](https://github.com/treydock))
+
+**Closed issues:**
+
+- Agent unable to connect to Vault because of cert issue [\#62](https://github.com/voxpupuli/puppet-vault_lookup/issues/62)
+- Detection of what kv version the vault is should be done via a different heuristic. [\#56](https://github.com/voxpupuli/puppet-vault_lookup/issues/56)
+
+**Merged pull requests:**
+
+- Move bulk of logic to PuppetX::VaultLookup::Lookup [\#77](https://github.com/voxpupuli/puppet-vault_lookup/pull/77) ([natemccurdy](https://github.com/natemccurdy))
+
 ## [v0.7.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v0.7.0) (2023-04-19)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.6.0...v0.7.0)
