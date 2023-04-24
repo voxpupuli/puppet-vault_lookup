@@ -234,6 +234,52 @@ notify { 'show the dev namespace DB password':
 }
 ```
 
+### A note about spec testing Puppet code that uses this function
+
+When spec testing Puppet code that uses the `vault_lookup::lookup()` function,
+you'll probably want to stub the function so that it doesn't hit your real
+Vault servers. Below is an example of how to do that. This is particularly
+useful when spec testing a class or define that defers the function call.
+
+Two things that will need to be configured are 1) a `require_relative` of the
+internal puppet_x module. Note that this assumes you're pulling the module down
+into a `spec/fixtures/` directory.
+```ruby
+require_relative '../fixtures/modules/vault_lookup/lib/puppet_x/vault_lookup/lookup'
+```
+
+and 2) a stub on the `PuppetX::VaultLookup::Lookup` class's `:lookup` method:
+```ruby
+before(:each) do
+  allow(PuppetX::VaultLookup::Lookup).to receive(:lookup)
+    .and_return(Puppet::Pops::Types::PSensitiveType::Sensitive.new('hello world'))
+end
+```
+
+Here's a complete example:
+```ruby
+require 'spec_helper'
+require_relative '../fixtures/modules/vault_lookup/lib/puppet_x/vault_lookup/lookup'
+
+describe 'some::class' do
+  on_supported_os.each do |os, os_facts|
+    context "on #{os}" do
+      let(:facts) { os_facts }
+
+      before(:each) do
+        allow(PuppetX::VaultLookup::Lookup).to receive(:lookup)
+          .and_return(sensitive('hello world'))
+      end
+
+      context 'with all defaults' do
+        it { is_expected.to compile }
+        it { is_expected.to contain_file('/etc/credentials.txt').with_content(sensitive('hello world')) }
+      end
+    end
+  end
+end
+```
+
 ## Authentication Methods
 
 The `vault_lookup::lookup()` function can authenticate to Vault in a number of ways. This table shows the currently supported `auth_method` types:
