@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require 'webrick'
 
 module PuppetVaultLookupHelpers
@@ -13,7 +15,6 @@ module PuppetVaultLookupHelpers
       "auth": null
     }
   JSON
-                         .freeze
 
   SECRET_SUCCESS_DATA = <<~JSON
     {
@@ -28,8 +29,7 @@ module PuppetVaultLookupHelpers
       "warnings": null,
       "auth": null
     }
-    JSON
-                        .freeze
+  JSON
 
   SECRET_SUCCESS_KV2_DATA = <<~JSON
     {
@@ -51,43 +51,41 @@ module PuppetVaultLookupHelpers
       },
       "warnings": null
     }
-    JSON
-                            .freeze
+  JSON
 
   AUTH_SUCCESS_DATA = <<~JSON
-      {
-        "request_id": "03d11bd4-b994-c432-150f-5703a75641d1",
-        "lease_id": "",
-        "renewable": false,
-        "lease_duration": 0,
-        "data": null,
-        "wrap_info": null,
-        "warnings": null,
-        "auth": {
-          "client_token": "7dad29d2-40af-038f-cf9c-0aeb616f8d20",
-          "accessor": "fd0c3269-9642-25e5-cebe-27a732be53a0",
-          "policies": [
-            "default",
-            "secret_reader"
-          ],
-          "token_policies": [
-            "default",
-            "secret_reader"
-          ],
-          "metadata": {
-            "authority_key_id": "b7:da:18:2f:cc:09:18:5d:d0:c5:24:0a:0a:66:46:ba:0d:f0:ea:4a",
-            "cert_name": "vault.docker",
-            "common_name": "localhost",
-            "serial_number": "5",
-            "subject_key_id": "ea:00:c0:0b:2d:38:01:28:ba:16:1f:08:64:de:0a:7c:8f:b7:43:33"
-          },
-          "lease_duration": 604800,
-          "renewable": true,
-          "entity_id": "e1bc06c5-303e-eec7-bf58-2a74fae2ec3d"
-        }
+    {
+      "request_id": "03d11bd4-b994-c432-150f-5703a75641d1",
+      "lease_id": "",
+      "renewable": false,
+      "lease_duration": 0,
+      "data": null,
+      "wrap_info": null,
+      "warnings": null,
+      "auth": {
+        "client_token": "7dad29d2-40af-038f-cf9c-0aeb616f8d20",
+        "accessor": "fd0c3269-9642-25e5-cebe-27a732be53a0",
+        "policies": [
+          "default",
+          "secret_reader"
+        ],
+        "token_policies": [
+          "default",
+          "secret_reader"
+        ],
+        "metadata": {
+          "authority_key_id": "b7:da:18:2f:cc:09:18:5d:d0:c5:24:0a:0a:66:46:ba:0d:f0:ea:4a",
+          "cert_name": "vault.docker",
+          "common_name": "localhost",
+          "serial_number": "5",
+          "subject_key_id": "ea:00:c0:0b:2d:38:01:28:ba:16:1f:08:64:de:0a:7c:8f:b7:43:33"
+        },
+        "lease_duration": 604800,
+        "renewable": true,
+        "entity_id": "e1bc06c5-303e-eec7-bf58-2a74fae2ec3d"
       }
-    JSON
-                      .freeze
+    }
+  JSON
 
   # rubocop:disable Style/MethodName
   class AuthSuccess < WEBrick::HTTPServlet::AbstractServlet
