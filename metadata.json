@@ -1,13 +1,15 @@
 {
   "name": "puppet-vault_lookup",
-  "version": "1.0.0",
+  "version": "1.0.1-rc0",
   "author": "Vox Pupuli",
   "summary": "Secret retrieval from Vault",
   "license": "Apache-2.0",
   "source": "https://github.com/voxpupuli/puppet-vault_lookup.git",
   "project_page": "https://github.com/voxpupuli/puppet-vault_lookup",
   "issues_url": "https://github.com/voxpupuli/puppet-vault_lookup/issues",
-  "dependencies": [],
+  "dependencies": [
+
+  ],
   "operatingsystem_support": [
     {
       "operatingsystem": "CentOS",
