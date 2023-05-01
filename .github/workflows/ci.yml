@@ -45,7 +45,7 @@ jobs:
         include: ${{fromJson(needs.setup_matrix.outputs.puppet_unit_test_matrix)}}
     env:
       BUNDLE_WITHOUT: development:system_tests:release
-      PUPPET_VERSION: "~> ${{ matrix.puppet }}.0"
+      PUPPET_VERSION: "~> ${{ matrix.puppet }}.24"
     name: Puppet ${{ matrix.puppet }} (Ruby ${{ matrix.ruby }})
     steps:
       - uses: actions/checkout@v2
