@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 require_relative '../../../puppet_x/vault_lookup/lookup'
 
 Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::InternalFunction) do

@@ -1,6 +1,7 @@
+# frozen_string_literal: true
+
 require 'puppet'
 
-# rubocop:disable Style/ClassAndModuleChildren
 module PuppetX
   module VaultLookup
     # Internal class for looking up data from Vault.
@@ -40,25 +41,11 @@ module PuppetX
           return prior_result
         end
 
-        if auth_method.nil?
-          auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert'
-        end
-
-        if role_id.nil?
-          role_id = ENV['VAULT_ROLE_ID']
-        end
-
-        if secret_id.nil?
-          secret_id = ENV['VAULT_SECRET_ID']
-        end
-
-        if cert_path_segment.nil?
-          cert_path_segment = 'v1/auth/cert/'
-        end
-
-        if approle_path_segment.nil?
-          approle_path_segment = 'v1/auth/approle'
-        end
+        auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert' if auth_method.nil?
+        role_id = ENV['VAULT_ROLE_ID'] if role_id.nil?
+        secret_id = ENV['VAULT_SECRET_ID'] if secret_id.nil?
+        cert_path_segment = 'v1/auth/cert/' if cert_path_segment.nil?
+        approle_path_segment = 'v1/auth/approle' if approle_path_segment.nil?
 
         vault_base_uri = URI(vault_addr)
         # URI is used here to parse the vault_addr into a host string
@@ -79,6 +66,7 @@ module PuppetX
         when 'approle'
           raise Puppet::Error, 'role_id and VAULT_ROLE_ID are both nil' if role_id.nil?
           raise Puppet::Error, 'secret_id and VAULT_SECRET_ID are both nil' if secret_id.nil?
+
           token = get_approle_auth_token(client,
                                          vault_base_uri,
                                          approle_path_segment,
@@ -101,6 +89,7 @@ module PuppetX
             agent_sink_file = ENV['VAULT_AGENT_SINK_FILE']
           end
           raise Puppet::Error, 'agent_sink_file must be defined when using the agent_sink auth method' if agent_sink_file.nil?
+
           token = read_token_from_sink(sink: agent_sink_file)
         end
 
@@ -155,9 +144,9 @@ module PuppetX
         segment = if cert_path_segment.end_with?('/')
                     cert_path_segment
                   else
-                    cert_path_segment + '/'
+                    "#{cert_path_segment}/"
                   end
-        login_url = vault_addr + segment + 'login'
+        login_url = vault_addr + segment + 'login' # rubocop:disable Style/StringConcatenation
         get_token(client, login_url, role_data, namespace)
       end
 
@@ -167,7 +156,7 @@ module PuppetX
           secret_id: secret_id
         }.to_json
 
-        login_url = vault_addr + path_segment + 'login'
+        login_url = vault_addr + path_segment + 'login' # rubocop:disable Style/StringConcatenation
         get_token(client, login_url, vault_request_data, namespace)
       end
 
@@ -196,9 +185,11 @@ module PuppetX
       def self.append_api_errors(message, response)
         errors   = json_parse(response, 'errors')
         warnings = json_parse(response, 'warnings')
-        message << " (api errors: #{errors})" if errors
-        message << " (api warnings: #{warnings})" if warnings
-        message
+        # Can't modify frozen String, so we copy.
+        copy = message.dup
+        copy << " (api errors: #{errors})" if errors
+        copy << " (api warnings: #{warnings})" if warnings
+        copy
       end
 
       def self.json_parse(response, field)
@@ -209,6 +200,7 @@ module PuppetX
 
       def self.read_token_from_sink(sink:)
         raise Puppet::Error, "The agent_sink_file does not exist or is not readable: #{sink}" unless Puppet::FileSystem.exist?(sink)
+
         Puppet::FileSystem.read(sink).chomp
       end
     end

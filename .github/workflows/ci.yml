@@ -7,21 +7,22 @@ name: CI
 on: pull_request
 
 concurrency:
-  group: ${{ github.head_ref }}
+  group: ${{ github.ref_name }}
   cancel-in-progress: true
 
 jobs:
   setup_matrix:
-    name: 'Setup Test Matrix'
+    name: Static validations
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     outputs:
       puppet_unit_test_matrix: ${{ steps.get-outputs.outputs.puppet_unit_test_matrix }}
       github_action_test_matrix: ${{ steps.get-outputs.outputs.github_action_test_matrix }}
     env:
       BUNDLE_WITHOUT: development:system_tests:release
+      PUPPET_GEM_VERSION: "~> 7.0"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -33,22 +34,22 @@ jobs:
         run: bundle exec rake rubocop
       - name: Setup Test Matrix
         id: get-outputs
-        run: bundle exec metadata2gha --use-fqdn --pidfile-workaround false
+        run: bundle exec metadata2gha --domain "example.com" --pidfile-workaround false
 
   unit:
     needs: setup_matrix
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         include: ${{fromJson(needs.setup_matrix.outputs.puppet_unit_test_matrix)}}
     env:
       BUNDLE_WITHOUT: development:system_tests:release
-      PUPPET_VERSION: "~> ${{ matrix.puppet }}.24"
-    name: Puppet ${{ matrix.puppet }} (Ruby ${{ matrix.ruby }})
+      PUPPET_GEM_VERSION: "~> ${{ matrix.puppet }}.24"
+    name: ${{ matrix.puppet }} (Ruby ${{ matrix.ruby }})
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -59,16 +60,16 @@ jobs:
 
   acceptance:
     needs: setup_matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     env:
       BUNDLE_WITHOUT: development:test:release
     strategy:
       fail-fast: false
       matrix:
         include: ${{fromJson(needs.setup_matrix.outputs.github_action_test_matrix)}}
-    name: ${{ matrix.puppet.name }} - ${{ matrix.setfile.name }}
+    name: "${{ matrix.puppet.name }} - ${{ matrix.setfile.name }}"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -79,6 +80,7 @@ jobs:
         env:
           BEAKER_PUPPET_COLLECTION: ${{ matrix.puppet.collection }}
           BEAKER_setfile: spec/acceptance/nodesets/docker/docker.yml
+          BEAKER_HYPERVISOR: docker
 
   tests:
     needs:
