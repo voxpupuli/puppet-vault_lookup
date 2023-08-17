@@ -4,7 +4,7 @@
 source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 group :test do
-  gem 'voxpupuli-test', '~> 6.0',   :require => false
+  gem 'voxpupuli-test', '~> 7.0',   :require => false
   gem 'coveralls',                  :require => false
   gem 'simplecov-console',          :require => false
   gem 'webrick',                    :require => false if RUBY_VERSION >= '3.2'
