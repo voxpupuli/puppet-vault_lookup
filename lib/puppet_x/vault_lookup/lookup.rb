@@ -21,13 +21,13 @@ module PuppetX
 
         if vault_addr.nil?
           Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
-          vault_addr = ENV['VAULT_ADDR']
+          vault_addr = ENV.fetch('VAULT_ADDR', nil)
           raise Puppet::Error, 'No vault_addr given and VAULT_ADDR env variable not set' if vault_addr.nil?
         end
 
         if namespace.nil?
           Puppet.debug 'No Vault namespace was set on function, defaulting to value from VAULT_NAMESPACE env value'
-          namespace = ENV['VAULT_NAMESPACE']
+          namespace = ENV.fetch('VAULT_NAMESPACE', nil)
         end
 
         # Check the cache.
@@ -42,8 +42,8 @@ module PuppetX
         end
 
         auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert' if auth_method.nil?
-        role_id = ENV['VAULT_ROLE_ID'] if role_id.nil?
-        secret_id = ENV['VAULT_SECRET_ID'] if secret_id.nil?
+        role_id = ENV.fetch('VAULT_ROLE_ID', nil) if role_id.nil?
+        secret_id = ENV.fetch('VAULT_SECRET_ID', nil) if secret_id.nil?
         cert_path_segment = 'v1/auth/cert/' if cert_path_segment.nil?
         approle_path_segment = 'v1/auth/approle/' if approle_path_segment.nil?
 
@@ -85,8 +85,8 @@ module PuppetX
           # This assumes the token is availble in a sink file populated by the Vault Agent.
           # @see https://developer.hashicorp.com/vault/docs/agent/autoauth/sinks/file
           if agent_sink_file.nil?
-            Puppet.debug "No agent sink file was set on function, defaulting to VAULT_AGENT_SINK_FILE env var: #{ENV['VAULT_AGENT_SINK_FILE']}"
-            agent_sink_file = ENV['VAULT_AGENT_SINK_FILE']
+            Puppet.debug "No agent sink file was set on function, defaulting to VAULT_AGENT_SINK_FILE env var: #{ENV.fetch('VAULT_AGENT_SINK_FILE', nil)}"
+            agent_sink_file = ENV.fetch('VAULT_AGENT_SINK_FILE', nil)
           end
           raise Puppet::Error, 'agent_sink_file must be defined when using the agent_sink auth method' if agent_sink_file.nil?
 

@@ -11,7 +11,7 @@ module PuppetVaultLookupHelpers
       "lease_duration": 0,
       "data": null,
       "wrap_info": null,
-      "warnings": ["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use \'vault kv get\' for this operation."],
+      "warnings": ["Invalid path for a versioned K/V secrets engine. See the API docs for the appropriate API endpoints to use. If using the Vault CLI, use 'vault kv get' for this operation."],
       "auth": null
     }
   JSON
