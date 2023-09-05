@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'puppet'
+require 'securerandom'
 
 module PuppetX
   module VaultLookup
@@ -17,7 +18,8 @@ module PuppetX
                       role_id: nil,
                       secret_id: nil,
                       approle_path_segment: nil,
-                      agent_sink_file: nil)
+                      agent_sink_file: nil,
+                      gen_secret_len: nil)
 
         if vault_addr.nil?
           Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
@@ -98,7 +100,8 @@ module PuppetX
                           uri: secret_uri,
                           token: token,
                           namespace: namespace,
-                          key: field)
+                          key: field,
+                          gen_secret_len: gen_secret_len)
 
         sensitive_data = Puppet::Pops::Types::PSensitiveType::Sensitive.new(data)
         Puppet.debug "Caching found data for #{path}"
@@ -114,11 +117,32 @@ module PuppetX
         end
       end
 
-      def self.get_secret(client:, uri:, token:, namespace:, key:)
+      def self.get_secret(client:, uri:, token:, namespace:, key:, gen_secret_len:)
         headers = { 'X-Vault-Token' => token, 'X-Vault-Namespace' => namespace }.delete_if { |_key, value| value.nil? }
         secret_response = client.get(uri,
                                      headers: headers,
                                      options: { include_system_store: true })
+
+        if secret_response.code == 404 && !gen_secret_len.nil?
+          # generate a new secret
+          Puppet.debug "Generating new secret at #{uri}"
+          new_secret = SecureRandom.alphanumeric(gen_secret_len)
+          param = { value: new_secret }
+          generate_response = client.post(uri,
+                                          JSON.generate(param),
+                                          headers: headers.merge({ 'Content-Type' => 'application/json' }),
+                                          options: { include_system_store: true })
+
+          unless generate_response.code >= 200 && generate_response.code <= 299
+            message = "Received #{generate_response.code} generate_response code from vault at #{uri} for secret put"
+            raise Puppet::Error, append_api_errors(message, generate_response)
+          end
+
+          secret_response = client.get(uri,
+                                       headers: headers,
+                                       options: { include_system_store: true })
+        end
+
         unless secret_response.success?
           message = "Received #{secret_response.code} response code from vault at #{uri} for secret lookup"
           raise Puppet::Error, append_api_errors(message, secret_response)
