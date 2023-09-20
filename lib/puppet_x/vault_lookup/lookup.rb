@@ -45,7 +45,7 @@ module PuppetX
         role_id = ENV['VAULT_ROLE_ID'] if role_id.nil?
         secret_id = ENV['VAULT_SECRET_ID'] if secret_id.nil?
         cert_path_segment = 'v1/auth/cert/' if cert_path_segment.nil?
-        approle_path_segment = 'v1/auth/approle' if approle_path_segment.nil?
+        approle_path_segment = 'v1/auth/approle/' if approle_path_segment.nil?
 
         vault_base_uri = URI(vault_addr)
         # URI is used here to parse the vault_addr into a host string
@@ -139,13 +139,17 @@ module PuppetX
         end
       end
 
+      def self.ensure_trailing_slash(path)
+        if path.end_with?('/')
+          path
+        else
+          "#{path}/"
+        end
+      end
+
       def self.get_cert_auth_token(client, vault_addr, cert_path_segment, cert_role, namespace)
         role_data = auth_login_body(cert_role)
-        segment = if cert_path_segment.end_with?('/')
-                    cert_path_segment
-                  else
-                    "#{cert_path_segment}/"
-                  end
+        segment = ensure_trailing_slash(cert_path_segment)
         login_url = vault_addr + segment + 'login' # rubocop:disable Style/StringConcatenation
         get_token(client, login_url, role_data, namespace)
       end
@@ -156,7 +160,8 @@ module PuppetX
           secret_id: secret_id
         }.to_json
 
-        login_url = vault_addr + path_segment + 'login' # rubocop:disable Style/StringConcatenation
+        segment = ensure_trailing_slash(path_segment)
+        login_url = vault_addr + segment + 'login' # rubocop:disable Style/StringConcatenation
         get_token(client, login_url, vault_request_data, namespace)
       end
 
