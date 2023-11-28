@@ -8,6 +8,7 @@ group :test do
   gem 'coveralls',                  :require => false
   gem 'simplecov-console',          :require => false
   gem 'puppet_metadata', '~> 2.0',  :require => false
+  gem 'webrick',                    :require => false if RUBY_VERSION >= '3.2'
 end
 
 group :development do
