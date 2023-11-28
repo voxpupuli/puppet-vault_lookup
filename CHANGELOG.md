@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v1.1.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v1.1.0) (2023-11-28)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v1.0.0...v1.1.0)
+
+**Implemented enhancements:**
+
+- Support Puppet 8 [\#88](https://github.com/voxpupuli/puppet-vault_lookup/pull/88) ([treydock](https://github.com/treydock))
+
 ## [v1.0.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v1.0.0) (2023-05-01)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v0.7.0...v1.0.0)
