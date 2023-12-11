@@ -41,7 +41,7 @@ module PuppetX
           return prior_result
         end
 
-        auth_method = ENV['VAULT_AUTH_METHOD'] || 'cert' if auth_method.nil?
+        auth_method = ENV.fetch('VAULT_AUTH_METHOD', 'cert') if auth_method.nil?
         role_id = ENV.fetch('VAULT_ROLE_ID', nil) if role_id.nil?
         secret_id = ENV.fetch('VAULT_SECRET_ID', nil) if secret_id.nil?
         cert_path_segment = 'v1/auth/cert/' if cert_path_segment.nil?
