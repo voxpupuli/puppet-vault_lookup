@@ -2,9 +2,7 @@
 
 require 'beaker-rspec'
 require 'beaker-rspec/spec_helper'
-require 'beaker-puppet'
-require 'beaker/puppet_install_helper'
-require 'beaker/module_install_helper'
+require 'beaker_puppet_helpers'
 
 describe 'lookup with vault configured to accept certs from puppetserver' do
   before(:all) do
@@ -12,7 +10,7 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
     # PATH, add the directories to the top of the /etc/bash.bashrc so the dirs
     # are available for all non-interactive bash shells.
     on(master, "sed -i '1s_^_PATH=/opt/puppetlabs/server/bin:/opt/puppetlabs/puppet/bin:/opt/puppetlabs/bin:$PATH\\n_' /etc/bash.bashrc")
-    install_module_on(master)
+    install_local_module_on(master)
     vault = find_host_with_role('vault')
     scp_to(vault, 'spec/acceptance/fixtures/unseal.sh', '/root/unseal.sh')
     on(vault, 'su root /root/unseal.sh')
