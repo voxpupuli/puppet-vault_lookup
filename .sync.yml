@@ -2,7 +2,7 @@
 .github/workflows/ci.yml:
   unmanaged: true
 Gemfile:
-  required:
+  optional:
     ':test':
       - gem: webrick
         ruby-operator: '>='
