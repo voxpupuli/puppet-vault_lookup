@@ -6,11 +6,10 @@
 [![Puppet Forge - downloads](https://img.shields.io/puppetforge/dt/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
 [![Puppet Forge - endorsement](https://img.shields.io/puppetforge/e/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
 [![Puppet Forge - scores](https://img.shields.io/puppetforge/f/puppet/vault_lookup.svg)](https://forge.puppetlabs.com/puppet/vault_lookup)
-[![puppetmodule.info docs](http://www.puppetmodule.info/images/badge.png)](http://www.puppetmodule.info/m/puppet-vault_lookup)
+[![puppetmodule.info docs](https://www.puppetmodule.info/images/badge.svg)](https://www.puppetmodule.info/m/puppet-vault_lookup)
 [![Apache-2 License](https://img.shields.io/github/license/voxpupuli/puppet-vault_lookup.svg)](LICENSE)
 
-Module to integrate Puppet 6 (and newer) and Puppet Enterprise 2019 (and newer)
-agents with Hashicorp Vault.
+Module to integrate Puppet agents with Hashicorp Vault.
 
 #### Table of Contents
 
@@ -35,7 +34,7 @@ the Puppetserver does not need permissions to read all your Vault secrets.
 ## Requirements
 
 This modules assumes the following:
-1. Puppet 6+
+1. Puppet (for supported versions, check metadata.json)
 2. An existing [Vault](https://www.vaultproject.io/) infrastructure
 
 The `vault_lookup::lookup()` function is expected to be run with the `Deferred`
@@ -492,4 +491,3 @@ file { '/tmp/secret_data.txt':
 A benefit of this method is that is uses the Vault Agent's cached token rather
 than generating a new token for each call of the function. This reduces the
 load on your Vault servers as token generation can be an expensive operation.
-
