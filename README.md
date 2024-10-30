@@ -120,7 +120,21 @@ Not all options can be set with environment variables. Use the table below to fi
   | `approle_path_segment` | ----                    |
   | `agent_sink_file`      | `VAULT_AGENT_SINK_FILE` |
 
+#### Environment variables on Puppet server
 
+When not using deferred function, the compiler will execute the function and needs either the specific settings or can make use of environment variables. Please note that environment variables must be set in `/etc/puppetlabs/puppetserver/conf.d/puppet-server.conf` within the `jruby-puppet` section.
+
+Please find a simple example on how to add environment variables to the conf file using hocon:
+
+```shell
+/opt/puppetlabs/puppet/lib/ruby/vendor_gems/bin/hocon \
+  -f /etc/puppetlabs/puppetserver/conf.d/pe-puppet-server.conf \
+  set jruby-puppet.environment-vars "{\
+    VAULT_ADDR: \"https://FQDN\",\
+    VAULT_ROLE_ID: 12345678-1234-1234-1234-1234567890ab,\
+     VAULT_SECRET_ID: 12345678-1234-1234-1234-1234567890ab\
+  }"
+```
 ### Usage Examples
 
 Here are some examples of each method:
