@@ -62,6 +62,26 @@ node default {
 }
 ```
 
+Or configure Vault server in Hiera:
+
+```yaml
+vault_lookup::server: https://vault.hostname:8200
+```
+
+and use simplified synax:
+
+```puppet
+$d = vault_lookup::kv('secret/test')
+```
+which will return `Deferred` function as well.
+
+If needed, you can override Vault server address or provide a Hiera lookup key to find
+a server.
+
+```puppet
+$d = vault_lookup::kv('secret/test', 'https://vault.hostname:8200')
+```
+
 The lookup function will be run on the agent and the value of `$d` will be
 resolved when the catalog is applied. This will make a call to
 `https://vault.hostname:8200/v1/secret/test` and wrap the result in Puppet's
