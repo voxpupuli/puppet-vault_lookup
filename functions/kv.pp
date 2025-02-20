@@ -1,4 +1,4 @@
-# @summary Fetches secret stored under $key from Vault $server using deferred function
+# @summary Fetches secret stored under $key from Vault server using deferred function
 # @param key Secret key path in Vault
 # @param ops Options passed to Vault
 #
