@@ -8,6 +8,6 @@
 function vault_lookup::fmt(String $format, Hash $args) >> Deferred {
   Deferred(
     'sprintf',
-    [$format, $args]
+    [$format, vault_lookup::unwrap($args)]
   )
 }
