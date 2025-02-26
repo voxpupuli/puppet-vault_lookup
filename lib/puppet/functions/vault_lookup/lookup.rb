@@ -16,6 +16,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     optional_param 'String', :secret_id
     optional_param 'Optional[String]', :approle_path_segment
     optional_param 'String', :agent_sink_file
+    optional_param 'boolean', :raise_exceptions
     return_type 'Sensitive'
   end
 
@@ -68,7 +69,9 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
              role_id = nil,
              secret_id = nil,
              approle_path_segment = nil,
-             agent_sink_file = nil)
+             agent_sink_file = nil,
+             raise_exceptions = true
+             )
 
     PuppetX::VaultLookup::Lookup.lookup(cache: cache,
                                         path: path,
@@ -82,5 +85,10 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
                                         secret_id: secret_id,
                                         approle_path_segment: approle_path_segment,
                                         agent_sink_file: agent_sink_file)
+    rescue StandardError => e
+      raise if raise_exceptions
+      Puppet.err(e.message)
+      nil
+    end
   end
 end
