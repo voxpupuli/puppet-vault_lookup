@@ -91,4 +91,3 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
       nil
     end
   end
-end
