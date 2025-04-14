@@ -94,7 +94,19 @@ below are optional.
 #### Positional Arguments
 
 ```
-vault_lookup::lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>], [<agent_sink_file>] )
+vault_lookup::lookup( <path>, [<vault_addr>], [<cert_path_segment>], [<cert_role>], [<namespace>], [<auth_namespace>], [<field>], [<auth_method>], [<role_id>], [<secret_id>], [<approle_path_segment>], [<agent_sink_file>] )
+```
+
+#### Usage in multi-tenant Vault setup
+
+Some Vault setups allows to obtain the authentication token in a defined namespace and to use it for secret retrieval in other namespaces. In this case you have to provide the namespace for authentication as an additional option:
+
+```
+$vault_conf = {
+  'approle_path_segment' => 'v1/auth/approle/',
+  'namespace'            => 'customer_1',
+  'auth_namespace'       => 'provider_1',
+}
 ```
 
 #### Options Hash

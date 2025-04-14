@@ -96,7 +96,7 @@ describe 'vault_lookup::lookup' do
     vault_server.mount("/#{custom_auth_segment}/login", AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccessKV2)
     vault_server.start_vault do |port|
-      result = function.execute('kv/test', "http://127.0.0.1:#{port}", custom_auth_segment, '', '', 'bar')
+      result = function.execute('kv/test', "http://127.0.0.1:#{port}", custom_auth_segment, '', '', '', 'bar')
       expect(result).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result.unwrap).to eq('baz')
 
@@ -193,16 +193,18 @@ describe 'vault_lookup::lookup' do
     vault_server.mount('/v1/auth/cert/login', AuthSuccess)
     vault_server.mount('/v1/kv/test', SecretLookupSuccess)
     vault_server.start_vault do |port|
-      allow(PuppetX::VaultLookup::Lookup).to receive(:get_secret).and_call_original.exactly(3).times
+      allow(PuppetX::VaultLookup::Lookup).to receive(:get_secret).and_call_original.exactly(4).times
       result1 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'foo')
       result2 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'bar')
       result3 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'baz')
+      result4 = function.execute('kv/test', 'vault_addr' => "http://127.0.0.1:#{port}", 'namespace' => 'qux', 'auth_namespace' => 'quux')
 
       expect(result1).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result2).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
       expect(result1.unwrap).to eq('foo' => 'bar')
       expect(result1.unwrap).to eq(result2.unwrap)
       expect(result1.unwrap).to eq(result3.unwrap)
+      expect(result1.unwrap).to eq(result4.unwrap)
     end
   end
 
@@ -226,7 +228,7 @@ describe 'vault_lookup::lookup' do
     end
   end
 
-  context 'when using the agent_sing auth method' do
+  context 'when using the agent_sink auth method' do
     let(:agent_sink_file) { '/tmp/vault_agent_sink' }
 
     it 'errors when token sink file does not exist' do
