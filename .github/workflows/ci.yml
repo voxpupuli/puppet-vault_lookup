@@ -60,7 +60,7 @@ jobs:
 
   acceptance:
     needs: setup_matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       BUNDLE_WITHOUT: development:test:release
     strategy:
