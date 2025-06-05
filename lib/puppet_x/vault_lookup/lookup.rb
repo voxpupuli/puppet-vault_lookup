@@ -12,6 +12,7 @@ module PuppetX
                       cert_path_segment: nil,
                       cert_role: nil,
                       namespace: nil,
+                      auth_namespace: nil,
                       field: nil,
                       auth_method: nil,
                       role_id: nil,
@@ -42,6 +43,7 @@ module PuppetX
         end
 
         auth_method = ENV.fetch('VAULT_AUTH_METHOD', 'cert') if auth_method.nil?
+        auth_namespace = namespace if auth_namespace.nil?
         role_id = ENV.fetch('VAULT_ROLE_ID', nil) if role_id.nil?
         secret_id = ENV.fetch('VAULT_SECRET_ID', nil) if secret_id.nil?
         cert_path_segment = 'v1/auth/cert/' if cert_path_segment.nil?
@@ -62,7 +64,7 @@ module PuppetX
                                       vault_base_uri,
                                       cert_path_segment,
                                       cert_role,
-                                      namespace)
+                                      auth_namespace)
         when 'approle'
           raise Puppet::Error, 'role_id and VAULT_ROLE_ID are both nil' if role_id.nil?
           raise Puppet::Error, 'secret_id and VAULT_SECRET_ID are both nil' if secret_id.nil?
@@ -72,7 +74,7 @@ module PuppetX
                                          approle_path_segment,
                                          role_id,
                                          secret_id,
-                                         namespace)
+                                         auth_namespace)
         when 'agent'
           # Setting the token to nil causes the 'X-Vault-Token' header to not be
           # added by this function when making requests to Vault. Instead, we're

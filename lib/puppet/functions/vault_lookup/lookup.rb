@@ -10,6 +10,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
     optional_param 'Optional[String]', :cert_path_segment
     optional_param 'String', :cert_role
     optional_param 'String', :namespace
+    optional_param 'Optional[String]', :auth_namespace
     optional_param 'String', :field
     optional_param 'Enum["cert", "approle", "agent", "agent_sink"]', :auth_method
     optional_param 'String', :role_id
@@ -45,6 +46,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
                                         cert_path_segment: options['cert_path_segment'],
                                         cert_role: options['cert_role'],
                                         namespace: options['namespace'],
+                                        auth_namespace: options['auth_namespace'],
                                         field: options['field'],
                                         auth_method: options['auth_method'],
                                         role_id: options['role_id'],
@@ -63,6 +65,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
              cert_path_segment = nil,
              cert_role = nil,
              namespace = nil,
+             auth_namespace = nil,
              field = nil,
              auth_method = nil,
              role_id = nil,
@@ -76,6 +79,7 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
                                         cert_path_segment: cert_path_segment,
                                         cert_role: cert_role,
                                         namespace: namespace,
+                                        auth_namespace: auth_namespace,
                                         field: field,
                                         auth_method: auth_method,
                                         role_id: role_id,
