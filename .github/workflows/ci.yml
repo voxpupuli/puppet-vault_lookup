@@ -17,7 +17,7 @@ jobs:
     timeout-minutes: 45
     outputs:
       puppet_unit_test_matrix: ${{ steps.get-outputs.outputs.puppet_unit_test_matrix }}
-      github_action_test_matrix: ${{ steps.get-outputs.outputs.github_action_test_matrix }}
+      puppet_beaker_test_matrix: ${{ steps.get-outputs.outputs.puppet_beaker_test_matrix }}
     env:
       BUNDLE_WITHOUT: development:system_tests:release
       PUPPET_GEM_VERSION: "~> 7.0"
@@ -66,8 +66,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include: ${{fromJson(needs.setup_matrix.outputs.github_action_test_matrix)}}
-    name: "${{ matrix.puppet.name }} - ${{ matrix.setfile.name }}"
+        include: ${{fromJson(needs.setup_matrix.outputs.puppet_beaker_test_matrix)}}
+    name: "${{ matrix.name }}"
     steps:
       - uses: actions/checkout@v3
       - name: Setup ruby
