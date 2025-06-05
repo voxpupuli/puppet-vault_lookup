@@ -4,6 +4,41 @@ All notable changes to this project will be documented in this file.
 Each new release typically also includes the latest modulesync defaults.
 These should not affect the functionality of the module.
 
+## [v2.0.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v2.0.0) (2025-06-05)
+
+[Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v1.1.0...v2.0.0)
+
+**Breaking changes:**
+
+- Drop EoL EL7 support [\#112](https://github.com/voxpupuli/puppet-vault_lookup/pull/112) ([bastelfreak](https://github.com/bastelfreak))
+- Drop Debian 9 and 10 support [\#93](https://github.com/voxpupuli/puppet-vault_lookup/pull/93) ([zilchms](https://github.com/zilchms))
+- Drop Ubuntu 18.04 support [\#92](https://github.com/voxpupuli/puppet-vault_lookup/pull/92) ([zilchms](https://github.com/zilchms))
+
+**Implemented enhancements:**
+
+- feat\(ruby\): additional namespace parameter for multi-tenancy setups [\#122](https://github.com/voxpupuli/puppet-vault_lookup/pull/122) ([pavelkovtunov](https://github.com/pavelkovtunov))
+- metadata.json: Add OpenVox [\#120](https://github.com/voxpupuli/puppet-vault_lookup/pull/120) ([jstraw](https://github.com/jstraw))
+- Add CentOS 9 and Rocky and AlmaLinux 8 and 9 support [\#95](https://github.com/voxpupuli/puppet-vault_lookup/pull/95) ([zilchms](https://github.com/zilchms))
+- Add Oracle Linux 8 and 9 support [\#94](https://github.com/voxpupuli/puppet-vault_lookup/pull/94) ([zilchms](https://github.com/zilchms))
+
+**Fixed bugs:**
+
+- make webrick optional in sync.yml [\#97](https://github.com/voxpupuli/puppet-vault_lookup/pull/97) ([zilchms](https://github.com/zilchms))
+
+**Closed issues:**
+
+- Issue gathering multiple fields from a secret in vault [\#109](https://github.com/voxpupuli/puppet-vault_lookup/issues/109)
+- certificate failed to verify with self signed certificates [\#107](https://github.com/voxpupuli/puppet-vault_lookup/issues/107)
+- Disable Cache [\#103](https://github.com/voxpupuli/puppet-vault_lookup/issues/103)
+- Issue authenticating to Vault using AppRole method [\#83](https://github.com/voxpupuli/puppet-vault_lookup/issues/83)
+- tvpartytonight/vault\_lookup migration [\#91](https://github.com/voxpupuli/puppet-vault_lookup/issues/91)
+
+**Merged pull requests:**
+
+- Add documentation on puppetserver environment variables [\#115](https://github.com/voxpupuli/puppet-vault_lookup/pull/115) ([tuxmea](https://github.com/tuxmea))
+- README.md: cleanup badges and documentation [\#113](https://github.com/voxpupuli/puppet-vault_lookup/pull/113) ([bastelfreak](https://github.com/bastelfreak))
+- Ensure login path segments have a trailing slash [\#86](https://github.com/voxpupuli/puppet-vault_lookup/pull/86) ([Wiston999](https://github.com/Wiston999))
+
 ## [v1.1.0](https://github.com/voxpupuli/puppet-vault_lookup/tree/v1.1.0) (2023-11-28)
 
 [Full Changelog](https://github.com/voxpupuli/puppet-vault_lookup/compare/v1.0.0...v1.1.0)
