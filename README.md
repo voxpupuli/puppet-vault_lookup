@@ -49,8 +49,47 @@ infrastructure is assumed to be up and reachable by your Puppet agents.
 Install this module as you would in any other; the necessary code will
 be distributed to Puppet agents via pluginsync.
 
-In your manifests, call the `vault_lookup::lookup()` function using the
-Deferred type. For example:
+Configure Vault server in Hiera:
+
+```yaml
+vault_lookup::server: https://vault.hostname:8200
+```
+get secret from Vault:
+
+```puppet
+$d = vault_lookup::kv('secret/test')
+```
+which will return `Deferred` function (evaluated on agent side).
+
+When working with `$d` (Deferred object), you can use `vault_lookup::fmt()` function (where you can apply `sprintf` formatting):
+```puppet
+file { '/path/to/your/file':
+  content => vault_lookup::fmt('password=%<pass>s', {'pass' => $d.unwrap }),
+}
+```
+Or you could use directly `Deferred` object:
+
+```puppet
+file { '/etc/secrets.conf':
+  ensure  => file,
+  content => Deferred('inline_epp',
+               ['PASSWORD=<%= $password.unwrap %>', {'password' => $d}]),
+}
+```
+
+Optionally you can specify which `field` should be retrieved:
+
+```puppet
+$d = vault_lookup::kv('secret/test', {'field' => 'password')
+```
+
+If needed, you can override Vault server address:
+
+```puppet
+$d = vault_lookup::kv('secret/test', {'vault_addr' => 'https://vault.hostname:8200')
+```
+
+Internally `vault_lookup::kv` creates a `Deferred` object:
 
 ```puppet
 $d = Deferred('vault_lookup::lookup', ["secret/test", 'https://vault.hostname:8200'])
@@ -72,7 +111,7 @@ You can also choose not to specify the Vault URL, and then Puppet will use the
 set in the service config file for Puppet, on Debian `/etc/default/puppet`, on RedHat
 `/etc/sysconfig/puppet`:
 
-```
+```puppet
 $d = Deferred('vault_lookup::lookup', ["secret/test"])
 
 node default {
