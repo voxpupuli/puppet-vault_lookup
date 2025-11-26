@@ -27,6 +27,13 @@ describe 'vault_lookup::lookup' do
     end.to raise_error(Puppet::Error, %r{No vault_addr given and VAULT_ADDR env variable not set})
   end
 
+  it 'returns nil instead of raising when raising is disabled' do
+    expect {
+      result = function.execute('/v1/whatever', 'vault.docker', false)
+      expect(result).to be(nil)
+    }.not_to raise_error
+  end
+
   it 'raises a Puppet error when auth fails' do
     vault_server = MockVault.new
     vault_server.mount('/v1/auth/cert/login', AuthFailure)
