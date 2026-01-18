@@ -8,7 +8,7 @@ describe 'vault_lookup::unwrap' do
   it 'converts sensitive Hash' do
     exp = { 'password' => 'p1ssw0rd' }
     expect(subject).to run.with_params(
-      { 'password' => Puppet::Pops::Types::PSensitiveType::Sensitive.new('p1ssw0rd') }
+      { 'password' => sensitive('p1ssw0rd') }
     ).and_return(exp)
   end
 
