@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-describe 'vault_lookup::unwrap' do
+describe 'vault_lookup::unpack' do
   let(:function) { subject }
 
   it 'converts sensitive Hash' do
