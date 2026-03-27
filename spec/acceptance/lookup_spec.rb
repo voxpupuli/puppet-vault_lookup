@@ -20,7 +20,7 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       retry_on(
         master,
         '/opt/puppetlabs/puppet/bin/curl --insecure --fail https://127.0.0.1:8140/status/v1/simple | grep running',
-        opts
+        opts,
       )
     end
   end
@@ -35,7 +35,7 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       scp_to(
         master,
         'spec/acceptance/fixtures/site.pp',
-        '/etc/puppetlabs/code/environments/production/manifests'
+        '/etc/puppetlabs/code/environments/production/manifests',
       )
       on(master, '/opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
     end
@@ -51,7 +51,7 @@ describe 'lookup with vault configured to accept certs from puppetserver' do
       scp_to(
         master,
         'spec/acceptance/fixtures/env_value/site.pp',
-        '/etc/puppetlabs/code/environments/production/manifests'
+        '/etc/puppetlabs/code/environments/production/manifests',
       )
       on(master, 'VAULT_ADDR=https://vault.local:8200 /opt/puppetlabs/bin/puppet agent -t --server puppetserver.local', acceptable_exit_codes: [0, 2])
     end

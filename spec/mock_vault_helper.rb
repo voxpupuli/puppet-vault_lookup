@@ -165,7 +165,7 @@ module PuppetVaultLookupHelpers
     def initialize
       @https = WEBrick::HTTPServer.new(
         BindAddress: '127.0.0.1',
-        Port: 0 # webrick will choose the first available port, and set it in the config
+        Port: 0, # webrick will choose the first available port, and set it in the config
       )
 
       trap('INT') do
