@@ -4,6 +4,7 @@ require 'spec_helper'
 require 'mock_vault_helper'
 
 include PuppetVaultLookupHelpers # rubocop:disable Style/MixinUsage
+
 describe 'vault_lookup::lookup' do
   let(:function) { subject }
 
@@ -121,7 +122,7 @@ describe 'vault_lookup::lookup' do
 
       opts = {
         'vault_addr' => "http://127.0.0.1:#{port}",
-        'cert_role' => 'test-cert-role'
+        'cert_role' => 'test-cert-role',
       }
       result_opts = function.execute('kv/test', opts)
       expect(result_opts).to be_a(Puppet::Pops::Types::PSensitiveType::Sensitive)
@@ -238,7 +239,7 @@ describe 'vault_lookup::lookup' do
         stub_const('ENV', ENV.to_hash.merge(
                             'VAULT_ADDR' => "http://127.0.0.1:#{port}",
                             'VAULT_AUTH_METHOD' => 'agent_sink',
-                            'VAULT_AGENT_SINK_FILE' => agent_sink_file
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
                           ))
         allow(PuppetX::VaultLookup::Lookup).to receive(:get_approle_auth_token)
         allow(PuppetX::VaultLookup::Lookup).to receive(:get_cert_auth_token)
@@ -258,7 +259,7 @@ describe 'vault_lookup::lookup' do
         stub_const('ENV', ENV.to_hash.merge(
                             'VAULT_ADDR' => "http://127.0.0.1:#{port}",
                             'VAULT_AUTH_METHOD' => 'agent_sink',
-                            'VAULT_AGENT_SINK_FILE' => agent_sink_file
+                            'VAULT_AGENT_SINK_FILE' => agent_sink_file,
                           ))
         allow(PuppetX::VaultLookup::Lookup).to receive(:get_approle_auth_token)
         allow(PuppetX::VaultLookup::Lookup).to receive(:get_cert_auth_token)

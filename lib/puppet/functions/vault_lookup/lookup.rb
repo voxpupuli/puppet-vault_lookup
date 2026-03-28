@@ -72,7 +72,6 @@ Puppet::Functions.create_function(:'vault_lookup::lookup', Puppet::Functions::In
              secret_id = nil,
              approle_path_segment = nil,
              agent_sink_file = nil)
-
     PuppetX::VaultLookup::Lookup.lookup(cache: cache,
                                         path: path,
                                         vault_addr: vault_addr,

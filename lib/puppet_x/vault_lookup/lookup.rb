@@ -19,7 +19,6 @@ module PuppetX
                       secret_id: nil,
                       approle_path_segment: nil,
                       agent_sink_file: nil)
-
         if vault_addr.nil?
           Puppet.debug 'No Vault address was set on function, defaulting to value from VAULT_ADDR env value'
           vault_addr = ENV.fetch('VAULT_ADDR', nil)
@@ -159,7 +158,7 @@ module PuppetX
       def self.get_approle_auth_token(client, vault_addr, path_segment, role_id, secret_id, namespace)
         vault_request_data = {
           role_id: role_id,
-          secret_id: secret_id
+          secret_id: secret_id,
         }.to_json
 
         segment = ensure_trailing_slash(path_segment)
