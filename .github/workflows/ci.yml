@@ -34,7 +34,7 @@ jobs:
         run: bundle exec rake rubocop
       - name: Setup Test Matrix
         id: get-outputs
-        run: bundle exec metadata2gha --domain "example.com" --pidfile-workaround false
+        run: bundle exec metadata2gha --domain "example.com"
 
   unit:
     needs: setup_matrix
